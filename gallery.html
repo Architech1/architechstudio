@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Works Gallery</title>
+  <link rel="stylesheet" href="gallery.css">
+</head>
+<body>
+
+  <!-- Minimal Header -->
+  <header class="minimal-header">
+    <a href="index.html" class="back-link">
+      &#8592; Back
+    </a>
+    <span class="gallery-title-minimal">Gallery</span>
+  </header>
+
+  <!-- Pure Image Grid -->
+  <main class="gallery-container">
+    <div class="minimal-grid" id="minimalGrid">
+      <!-- images are added automatically by gallery.js from the gallery-images folder -->
+    </div>
+  </main>
+
+  <!-- Clean Minimal Lightbox -->
+  <div class="minimal-lightbox" id="minimalLightbox" role="dialog" aria-modal="true">
+    <button class="lb-close" id="lbClose" aria-label="Close">&times;</button>
+    <button class="lb-nav lb-prev" id="lbPrev" aria-label="Previous">&#10094;</button>
+    <button class="lb-nav lb-next" id="lbNext" aria-label="Next">&#10095;</button>
+    <div class="lightbox-image-wrapper">
+      <img id="lbImg" src="" alt="">
+    </div>
+  </div>
+
+  <script src="gallery.js"></script>
+</body>
+</html>
