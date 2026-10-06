@@ -43,6 +43,24 @@
 .video-marquee-wrapper.vc-any-playing * { animation-play-state: paused !important; }
 @media (max-width: 767px) { .vc-play .vc-circle { width: 48px; height: 48px; } .vc-play .vc-circle::before { border-width: 8px 0 8px 14px; margin-left: 4px; } }
 </style>
+<style id="hero-fix-css">
+.hero-slideshow{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;background:#0a0a0a linear-gradient(135deg,#111,#222)}
+.hero-slideshow .hero-slide{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;object-position:center center;display:block;transform:none!important}
+.hero-slideshow .hero-overlay{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.65),rgba(0,0,0,.25) 55%,rgba(0,0,0,.45))}
+@media (max-width:768px){.hero-slideshow .hero-slide{object-position:50% 40%}}
+</style>
+<style id="hero-loc-fix">
+/* hero: every wrapper between the section and the slideshow fills the section */
+#home-image-slider-1{overflow:hidden}
+#home-image-slider-1 > div,#home-image-slider-1 #Image,#home-image-slider-1 #Image_0,#home-image-slider-1 #__17{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+/* "We are located at": one clean block, nothing inside may be absolutely positioned or squeezed */
+.loc-row{box-sizing:border-box;width:min(330px,calc(100vw - 64px)) !important;max-width:none !important}
+.loc-row .loc-text,.loc-row .loc-title,.loc-row .loc-places{position:static !important;left:auto !important;top:auto !important;right:auto !important;transform:none !important;translate:none !important;width:auto !important;height:auto !important;margin-left:0 !important;text-align:left !important;overflow:visible !important}
+.loc-row .loc-text{flex:1 1 auto !important;min-width:0 !important;max-width:none !important}
+.loc-row .loc-title,.loc-row .loc-places{white-space:normal !important;overflow-wrap:anywhere}
+.loc-row svg{position:static !important;flex:0 0 auto !important;width:26px !important;height:30px !important;margin:0 !important}
+@media (min-width:769px){.loc-row{width:520px !important}.loc-row svg{width:36px !important;height:38px !important}}
+</style>
 <style id="splash-css">
 /* ---- loading splash screen ---- */
 #splash-screen{position:fixed;inset:0;z-index:100000;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;opacity:1;visibility:visible;transition:opacity .7s ease,visibility .7s ease}
@@ -61,8 +79,18 @@ html.splash-lock,html.splash-lock body{overflow:hidden !important}
 <script>document.documentElement.classList.add('splash-lock');</script>
 <script>/* earliest possible preload of the first hero image + first video thumbnails (urls remembered from the previous visit) */
 (function(){try{function pl(u){var l=document.createElement('link');l.rel='preload';l.as='image';l.href=u;l.setAttribute('fetchpriority','high');document.head.appendChild(l);}
-var h=JSON.parse(localStorage.getItem('heroUrls')||'[]');if(h[0])pl(h[0]);
+var h=JSON.parse(localStorage.getItem('heroUrls')||'[]');pl('slider/2.jpg');
 var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1;i<=3;i++)pl(t.d+i+'.'+t.e);}}catch(e){}})();</script>
+<style id="loc-css">
+/* "We are located at" row: icon + text sit side by side and wrap by themselves (mobile + desktop) */
+.loc-row{display:flex !important;flex-direction:row !important;align-items:flex-start !important;justify-content:flex-start !important;gap:12px;
+  width:auto !important;height:auto !important;min-width:0 !important;overflow:visible !important;font-family:Poppins,sans-serif;color:#fff;pointer-events:none}
+.loc-row svg{flex:0 0 auto;display:block}
+.loc-row .loc-text{display:block;min-width:0;max-width:270px}
+.loc-row .loc-title{display:block;font-size:14px;line-height:20px;font-weight:600;color:#fff;white-space:normal}
+.loc-row .loc-places{display:block;margin-top:4px;font-size:13px;line-height:20px;font-weight:400;color:rgba(255,255,255,.85);white-space:normal}
+@media (min-width:769px){.loc-row{gap:16px}.loc-row .loc-text{max-width:460px}.loc-row .loc-title{font-size:18px;line-height:26px}.loc-row .loc-places{font-size:16px;line-height:26px}}
+</style>
 </head>
 <body>
 <div id="splash-screen" role="status" aria-label="Loading">
@@ -446,11 +474,10 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 </div>
 <span class="pointer-events-none text" id="Heading_2_Email"><span id="__129">Email</span></span>
 <span class="pointer-events-none text" id="Heading_2_Link_info_globalsolutionlog_com"><span id="__130">sarath@architechstudio.com</span></span>
-<div id="Image_8">
+<div id="Image_8" class="loc-row">
 <svg class="pointer-events-none" fill="none" height="30" id="address_svg" preserveaspectratio="none" viewbox="0 0 26 30" width="26" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#_9979_1087__clip0_9979_1087)"><path d="M24.1719 12.5C24.1719 21.25 12.9219 28.75 12.9219 28.75C12.9219 28.75 1.67188 21.25 1.67188 12.5C1.67188 9.51629 2.85714 6.65484 4.96692 4.54505C7.07673 2.43526 9.93816 1.25 12.9219 1.25C15.9056 1.25 18.767 2.43526 20.8768 4.54505C22.9866 6.65484 24.1719 9.51629 24.1719 12.5Z" stroke="#0072AC" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.14286"></path><path d="M12.9219 16.25C14.9929 16.25 16.6719 14.5711 16.6719 12.5C16.6719 10.4289 14.9929 8.75 12.9219 8.75C10.8508 8.75 9.17188 10.4289 9.17188 12.5C9.17188 14.5711 10.8508 16.25 12.9219 16.25Z" stroke="#0072AC" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.14286"></path></g><defs><clippath id="_9979_1087__clip0_9979_1087"><rect fill="white" height="30" transform="translate(-2.07812)" width="30"></rect></clippath></defs></svg>
+<span class="loc-text"><span class="loc-title">We are located at</span><span class="loc-places">Kerala, Wayanad, Kozhikode, Karnataka (Bangalore), Hyderabad, Dubai, UK</span></span>
 </div>
-<span class="pointer-events-none text" id="Heading_2_Address"><span id="__131">We are located at</span></span>
-<span class="pointer-events-none text" id="_4068_Office_5_A_Near_Aldor_Medical_Center_Pearl_Street_Saihat_32451_6949_Dammam_Kingdom_of_Saudi_Arabia"><span id="__132">Kerala, Wayanad, Kozhikode, Karnataka (Bangalore), Hyderabad, Dubai, UK</span></span>
 <div id="Background_Border_4">
 <div id="contactForm">
 <span class="pointer-events-none text" id="_9979_1094"><span id="__136">First Name*</span></span>
@@ -962,11 +989,10 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 </div>
 <span class="pointer-events-none text" id="_9979_781"><span id="__184">Email</span></span>
 <span class="pointer-events-none text" id="_9979_782"><span id="__185">sarath@architectstudio.in</span></span>
-<div id="Image_23">
+<div id="Image_23" class="loc-row">
 <svg class="pointer-events-none" fill="none" height="38" id="SVG_13" preserveaspectratio="none" viewbox="0 0 36 38" width="36" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#_9979_784__clip0_9979_784)"><path d="M31.7812 15.334C31.7812 26.4173 17.5313 35.9173 17.5313 35.9173C17.5313 35.9173 3.28125 26.4173 3.28125 15.334C3.28125 11.5546 4.78258 7.9301 7.45498 5.25771C10.1274 2.58531 13.7519 1.08398 17.5313 1.08398C21.3107 1.08398 24.935 2.58531 27.6074 5.25771C30.2798 7.9301 31.7812 11.5546 31.7812 15.334Z" stroke="#0072AC" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.71429"></path><path d="M17.5313 20.083C20.1547 20.083 22.2813 17.9564 22.2813 15.333C22.2813 12.7097 20.1547 10.583 17.5313 10.583C14.9079 10.583 12.7812 12.7097 12.7812 15.333C12.7812 17.9564 14.9079 20.083 17.5313 20.083Z" stroke="#0072AC" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.71429"></path></g><defs><clippath id="_9979_784__clip0_9979_784"><rect fill="white" height="38" transform="translate(0 -0.5)" width="36"></rect></clippath></defs></svg>
+<span class="loc-text"><span class="loc-title">We are located at</span><span class="loc-places">Kerala, Wayanad, Kozhikode, Karnataka (Bangalore), Hyderabad, Dubai, UK</span></span>
 </div>
-<span class="pointer-events-none text" id="_9979_787"><span id="__186">We are located at</span></span>
-<span class="pointer-events-none text" id="_9979_789"><span id="__189">Kerala, Wayanad, Kozhikode, Karnataka (Bangalore), Hyderabad, Dubai, UK</span></span>
 <div id="Background_Border_4">
 <span class="pointer-events-none text" id="_9979_791"><span id="__193">First Name*</span></span>
 <input id="firstName" type="text" value=""/>
@@ -1136,14 +1162,16 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
    For each folder name it tries: (1) images.json, (2) the server's folder listing, (3) numbered / common file names.
    Open the browser console (F12) to see what was found. The old built-in hero slides are removed. */
 (function () {
-  var DIRS = ['slider/', 'Slider/', 'sliders/'];
+  var DIRS = ['slider/'];
   var EXT = /\.(jpe?g|png|webp|avif|gif)(\?.*)?$/i;
-  var EXTS = ['jpg', 'jpeg', 'png', 'webp', 'JPG', 'PNG'];
-  var PREFIXES = ['', 'slide', 'slide-', 'slide_', 'slider', 'slider-', 'img', 'img_', 'image', 'image-', 'image_'];
+  var EXTS = ['jpg', 'jpeg', 'png', 'webp'];
+  var PREFIXES = ['', 'slide', 'slide-', 'slide_', 'hero', 'hero-', 'img', 'image'];
   var DELAY = 4500;    // ms each image stays on screen
   /* FASTEST + SAFEST: type your slider file names here (inside the slider folder), e.g. ['1.jpg','2.jpg','hero-3.webp'].
      When this list is filled, nothing else is searched - the images start loading immediately. */
-  var HERO_IMAGES = [];
+  var HERO_IMAGES = ['2.jpg', '3.jpg', '4.jpeg'];
+  /* shown immediately (and whenever the slider folder is missing/empty) so the hero is never blank */
+  var FALLBACK = ['gallery-images/alcove_img_2.jpg', 'gallery-images/alcove_img_3.jpg', 'gallery-images/alcove_img_5.jpg', 'gallery-images/alcove_img_6.jpg', 'gallery-images/alcove_img_7.jpg', 'gallery-images/alcove_img_8.jpg', 'images/img_27_97e48d30.jpg'];
 
   function log() { try { console.info.apply(console, ['[hero slider]'].concat([].slice.call(arguments))); } catch (e) {} }
   function natural(a, b) { return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }); }
@@ -1174,24 +1202,30 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
     });
   }
   function fromNumbered(dir) {
-    // step 1: find which "<prefix><number>.<ext>" pattern exists (tries 0..2 in parallel)
-    var probes = [];
-    [1, 0].forEach(function (n) { PREFIXES.forEach(function (pf) { EXTS.forEach(function (ex) { probes.push({ pf: pf, ex: ex, n: n, url: dir + pf + n + '.' + ex }); }); }); });
-    return Promise.all(probes.map(function (pr) { return canLoad(pr.url).then(function (ok) { return ok ? pr : null; }); })).then(function (hits) {
-      hits = hits.filter(Boolean);
+    // stage 1: which "<prefix><number>.<ext>" pattern exists? try number 1 first, then 0 and 2 only if needed
+    function probe(nums) {
+      var probes = [];
+      nums.forEach(function (n) { PREFIXES.forEach(function (pf) { EXTS.forEach(function (ex) { probes.push({ pf: pf, ex: ex, n: n, url: dir + pf + n + '.' + ex }); }); }); });
+      return Promise.all(probes.map(function (pr) { return canLoad(pr.url).then(function (ok) { return ok ? pr : null; }); }))
+        .then(function (h) { return h.filter(Boolean); });
+    }
+    return probe([1]).then(function (h) { return h.length ? h : probe([0, 2]); }).then(function (hits) {
       if (!hits.length) return [];
       var first = hits.sort(function (a, b) { return a.n - b.n; })[0], out = [];
-      // step 2: walk upward with that prefix, any extension
-      function tryExt(n, k) {
-        if (k >= EXTS.length) return Promise.resolve(null);
-        var url = dir + first.pf + n + '.' + EXTS[k];
-        return canLoad(url).then(function (ok) { return ok ? url : tryExt(n, k + 1); });
+      // stage 2: walk upward with that prefix; 4 numbers at a time, all extensions at once
+      function check(n) {
+        return Promise.all(EXTS.map(function (ex) { var u = dir + first.pf + n + '.' + ex; return canLoad(u).then(function (ok) { return ok ? u : null; }); }))
+          .then(function (r) { return r.filter(Boolean)[0] || null; });
       }
-      function next(n) {
-        if (n > 80) return Promise.resolve(out);
-        return tryExt(n, 0).then(function (url) { if (!url) return out; out.push(url); return next(n + 1); });
+      function chunk(st) {
+        if (st > 80) return Promise.resolve(out);
+        var ns = [st, st + 1, st + 2, st + 3];
+        return Promise.all(ns.map(check)).then(function (res) {
+          for (var i = 0; i < res.length; i++) { if (!res[i]) return out; out.push(res[i]); }
+          return chunk(st + 4);
+        });
       }
-      return next(first.n);
+      return chunk(first.n);
     });
   }
   function findIn(dir) {      // manifest + folder listing are asked at the same time (not one after the other)
@@ -1228,7 +1262,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
         im.alt = 'Project image ' + (i + 1); im.draggable = false; im.decoding = 'async'; im.dataset.src = u;
         if (i === 0) im.src = u;                 // only the first image loads now; the next ones load one after another
         if (i === 0) { im.fetchPriority = 'high'; im.loading = 'eager';
-          im.onerror = function () { writeCache([]); if (!im.dataset.retry) { im.dataset.retry = 1; find().then(function (f) { if (f.length) { writeCache(f); build(f); } }); } };
+          im.onerror = function () { writeCache([]); if (!im.dataset.retry) { im.dataset.retry = 1; find().then(function (f) { if (f.length) { writeCache(f); build(f); } else if (urls !== FALLBACK) build(FALLBACK); }); } };
         } else { im.loading = 'eager'; }
         im.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;transition:opacity 1.5s ease-in-out;opacity:' + (i === 0 ? 1 : 0) + ';';
         box.insertBefore(im, overlay || null);
@@ -1263,7 +1297,12 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
     build(cached);
     find().then(function (f) { if (f.length) writeCache(f); }).catch(function () {});
   } else {
-    find().then(function (f) { if (f.length) writeCache(f); build(f); }).catch(function (e) { log('error', e); });
+    (function pick(i) {                   // first visit: show the first fallback image that really loads, don't wait for the search
+      if (i >= FALLBACK.length) { log('no fallback image could be loaded'); return; }
+      var t = new Image(); t.onload = function () { if (!document.querySelector('.hero-slideshow img.hero-slide')) build(FALLBACK.slice(i)); };
+      t.onerror = function () { pick(i + 1); }; t.src = FALLBACK[i];
+    })(0);
+    find().then(function (f) { if (f.length) { writeCache(f); build(f); } }).catch(function (e) { log('error', e); });
   }
 })();
 </script>
