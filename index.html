@@ -35,6 +35,8 @@
   border-color: transparent transparent transparent #111;
 }
 .vc-playing .vc-play { display: none; }
+.vc-thumb { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 30%; z-index:4; pointer-events:none; background:#111; }
+.vc-thumb.vc-gone { display:none; }
 .folder-video { cursor: pointer; object-fit: cover; object-position: 50% 30%; }
 /* stop the auto-scrolling carousel while a video is playing */
 .video-marquee-wrapper.vc-any-playing,
@@ -447,8 +449,8 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 <div id="Image_8">
 <svg class="pointer-events-none" fill="none" height="30" id="address_svg" preserveaspectratio="none" viewbox="0 0 26 30" width="26" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#_9979_1087__clip0_9979_1087)"><path d="M24.1719 12.5C24.1719 21.25 12.9219 28.75 12.9219 28.75C12.9219 28.75 1.67188 21.25 1.67188 12.5C1.67188 9.51629 2.85714 6.65484 4.96692 4.54505C7.07673 2.43526 9.93816 1.25 12.9219 1.25C15.9056 1.25 18.767 2.43526 20.8768 4.54505C22.9866 6.65484 24.1719 9.51629 24.1719 12.5Z" stroke="#0072AC" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.14286"></path><path d="M12.9219 16.25C14.9929 16.25 16.6719 14.5711 16.6719 12.5C16.6719 10.4289 14.9929 8.75 12.9219 8.75C10.8508 8.75 9.17188 10.4289 9.17188 12.5C9.17188 14.5711 10.8508 16.25 12.9219 16.25Z" stroke="#0072AC" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.14286"></path></g><defs><clippath id="_9979_1087__clip0_9979_1087"><rect fill="white" height="30" transform="translate(-2.07812)" width="30"></rect></clippath></defs></svg>
 </div>
-<span class="pointer-events-none text" id="studio_loc_title_m"><span>We are located at</span></span>
-<span class="pointer-events-none text" id="studio_loc_text_m"><span>Kerala, Wayanad, Kozhikode, Karnataka (Bangalore), Hyderabad, Dubai, UK</span></span>
+<span class="pointer-events-none text" id="Heading_2_Address"><span id="__131">We are located at</span></span>
+<span class="pointer-events-none text" id="_4068_Office_5_A_Near_Aldor_Medical_Center_Pearl_Street_Saihat_32451_6949_Dammam_Kingdom_of_Saudi_Arabia"><span id="__132">Kerala, Wayanad, Kozhikode, Karnataka (Bangalore), Hyderabad, Dubai, UK</span></span>
 <div id="Background_Border_4">
 <div id="contactForm">
 <span class="pointer-events-none text" id="_9979_1094"><span id="__136">First Name*</span></span>
@@ -963,8 +965,8 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 <div id="Image_23">
 <svg class="pointer-events-none" fill="none" height="38" id="SVG_13" preserveaspectratio="none" viewbox="0 0 36 38" width="36" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#_9979_784__clip0_9979_784)"><path d="M31.7812 15.334C31.7812 26.4173 17.5313 35.9173 17.5313 35.9173C17.5313 35.9173 3.28125 26.4173 3.28125 15.334C3.28125 11.5546 4.78258 7.9301 7.45498 5.25771C10.1274 2.58531 13.7519 1.08398 17.5313 1.08398C21.3107 1.08398 24.935 2.58531 27.6074 5.25771C30.2798 7.9301 31.7812 11.5546 31.7812 15.334Z" stroke="#0072AC" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.71429"></path><path d="M17.5313 20.083C20.1547 20.083 22.2813 17.9564 22.2813 15.333C22.2813 12.7097 20.1547 10.583 17.5313 10.583C14.9079 10.583 12.7812 12.7097 12.7812 15.333C12.7812 17.9564 14.9079 20.083 17.5313 20.083Z" stroke="#0072AC" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.71429"></path></g><defs><clippath id="_9979_784__clip0_9979_784"><rect fill="white" height="38" transform="translate(0 -0.5)" width="36"></rect></clippath></defs></svg>
 </div>
-<span class="pointer-events-none text" id="studio_loc_title_d"><span>We are located at</span></span>
-<span class="pointer-events-none text" id="studio_loc_text_d"><span>Kerala, Wayanad, Kozhikode, Karnataka (Bangalore), Hyderabad, Dubai, UK</span></span>
+<span class="pointer-events-none text" id="_9979_787"><span id="__186">We are located at</span></span>
+<span class="pointer-events-none text" id="_9979_789"><span id="__189">Kerala, Wayanad, Kozhikode, Karnataka (Bangalore), Hyderabad, Dubai, UK</span></span>
 <div id="Background_Border_4">
 <span class="pointer-events-none text" id="_9979_791"><span id="__193">First Name*</span></span>
 <input id="firstName" type="text" value=""/>
@@ -1139,6 +1141,9 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
   var EXTS = ['jpg', 'jpeg', 'png', 'webp', 'JPG', 'PNG'];
   var PREFIXES = ['', 'slide', 'slide-', 'slide_', 'slider', 'slider-', 'img', 'img_', 'image', 'image-', 'image_'];
   var DELAY = 4500;    // ms each image stays on screen
+  /* FASTEST + SAFEST: type your slider file names here (inside the slider folder), e.g. ['1.jpg','2.jpg','hero-3.webp'].
+     When this list is filled, nothing else is searched - the images start loading immediately. */
+  var HERO_IMAGES = [];
 
   function log() { try { console.info.apply(console, ['[hero slider]'].concat([].slice.call(arguments))); } catch (e) {} }
   function natural(a, b) { return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }); }
@@ -1220,10 +1225,11 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
       return urls.map(function (u, i) {
         var im = document.createElement('img');
         im.className = 'hero-slide';
-        im.src = u; im.alt = 'Project image ' + (i + 1); im.draggable = false; im.decoding = 'async';
+        im.alt = 'Project image ' + (i + 1); im.draggable = false; im.decoding = 'async'; im.dataset.src = u;
+        if (i === 0) im.src = u;                 // only the first image loads now; the next ones load one after another
         if (i === 0) { im.fetchPriority = 'high'; im.loading = 'eager';
           im.onerror = function () { writeCache([]); if (!im.dataset.retry) { im.dataset.retry = 1; find().then(function (f) { if (f.length) { writeCache(f); build(f); } }); } };
-        } else if (i === 1) { im.loading = 'eager'; } else im.loading = 'lazy';
+        } else { im.loading = 'eager'; }
         im.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;transition:opacity 1.5s ease-in-out;opacity:' + (i === 0 ? 1 : 0) + ';';
         box.insertBefore(im, overlay || null);
         return im;
@@ -1232,17 +1238,28 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
     log('showing', urls.length, 'images', urls);
     if (urls.length < 2) return;
     var cur = 0;
+    function load(i) { groups.forEach(function (g) { var im = g[i]; if (im && !im.src) im.src = im.dataset.src; }); }
+    function ready(i) { return groups.every(function (g) { return g[i].complete && g[i].naturalWidth > 0; }); }
+    var first = groups[0][0];
+    if (first.complete) load(1); else first.addEventListener('load', function () { load(1); }, { once: true });
     if (timer) clearInterval(timer);
     timer = setInterval(function () {
       if (document.hidden) return;
       var nxt = (cur + 1) % urls.length;
+      load(nxt);
+      if (!ready(nxt)) return;                      // next image not downloaded yet: keep showing the current one
       groups.forEach(function (g) { g[cur].style.opacity = 0; g[nxt].style.opacity = 1; });
       cur = nxt;
+      load((cur + 1) % urls.length);                // start downloading the one after, so it is ready in time
     }, DELAY);
   }
 
-  var cached = readCache();
-  if (cached.length) {            // repeat visit: show the hero image immediately, refresh the list in the background
+  var explicit = HERO_IMAGES.map(function (x) { return String(x).indexOf('/') === -1 ? DIRS[0] + x : x; });
+  var cached = explicit.length ? [] : readCache();
+  if (explicit.length) {
+    writeCache(explicit);
+    build(explicit);
+  } else if (cached.length) {            // repeat visit: show the hero image immediately, refresh the list in the background
     build(cached);
     find().then(function (f) { if (f.length) writeCache(f); }).catch(function () {});
   } else {
@@ -1384,6 +1401,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
   function playVideo(v) {
     allVideos().forEach(function (o) { if (o !== v && !o.paused) o.pause(); });  // one at a time
     if (v.dataset.seekCover) { v.currentTime = 0; delete v.dataset.seekCover; }
+    var th = v.parentNode.querySelector('.vc-thumb'); if (th) th.classList.add('vc-gone');   // thumbnail disappears only now
     loadSrc(v, 'auto');
     v.dataset.started = '1';
     v.muted = false; v.volume = 1;
@@ -1428,7 +1446,16 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
     delete v.dataset.started; delete v.dataset.seekCover; delete v.dataset.hasThumb; v.removeAttribute('poster'); v.removeAttribute('src');
     v.dataset.src = url + (url.indexOf('#') === -1 ? '#t=0.5' : '');   // #t=0.5 -> browser shows a real frame as cover
     findThumb(videoNumber(url, index || 0)).then(function (thumb) {
-      if (thumb) { v.dataset.hasThumb = '1'; v.poster = thumb; }
+      if (thumb) {
+        v.dataset.hasThumb = '1';
+        var box = v.parentNode;
+        Array.prototype.forEach.call(box.querySelectorAll('.vc-thumb'), function (o) { o.remove(); });
+        var ti = document.createElement('img');            // stays on top of the video until the visitor clicks play
+        ti.className = 'vc-thumb'; ti.alt = ''; ti.decoding = 'async'; ti.draggable = false;
+        if ((index || 0) < 4) ti.fetchPriority = 'high';
+        ti.src = thumb;
+        box.appendChild(ti);
+      }
       if (io) io.observe(slot); else if (!thumb) loadSrc(v, 'metadata');
     });
     ['pointerenter', 'touchstart', 'focusin'].forEach(function (ev) {
