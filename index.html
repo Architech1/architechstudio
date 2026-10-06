@@ -2000,7 +2000,48 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 <script>
 /* "We are located at": width follows the real design canvas (390px mobile / 1920px desktop), so it fits every device */
 (function () {
+  /* Match the "We are located at" row to the Call Us / Email rows: same icon column, same text column, same fonts/colours, same row spacing */
+  function alignLoc() {
+    var mobile = window.innerWidth <= 768;
+    var wrap = document.querySelector(mobile ? '.responsive-mobile' : '.responsive-desktop');
+    if (!wrap) return;
+    var ids = mobile
+      ? { callIcon: null, mailIcon: 'Image_22', label: '_9979_781', value: '_9979_782', loc: 'Image_23', callLabel: '_9979_774' }
+      : { callIcon: 'Image_6', mailIcon: 'Image_7', label: 'Heading_2_Email', value: 'Heading_2_Link_info_globalsolutionlog_com', loc: 'Image_8', callLabel: 'Heading_2_Call_Us' };
+    function q(id) { return id ? wrap.querySelector('#' + id) : null; }
+    var mailIcon = q(ids.mailIcon), label = q(ids.label), value = q(ids.value), loc = q(ids.loc), callLabel = q(ids.callLabel);
+    if (!mailIcon || !label || !value || !loc || !callLabel) return;
+    var icon = loc.querySelector('svg'), title = loc.querySelector('.loc-title'), places = loc.querySelector('.loc-places'), box = loc.querySelector('.loc-text');
+    if (!icon || !title || !places || !box) return;
+    /* row pitch = distance between the Call Us heading and the Email heading */
+    var pitch = label.offsetTop - callLabel.offsetTop;
+    if (!(pitch > 0)) return;
+    var iconW = mailIcon.offsetWidth || icon.getBoundingClientRect().width || 26;
+    var gap = Math.max(8, label.offsetLeft - mailIcon.offsetLeft - iconW);
+    var P = function (el, k, v) { el.style.setProperty(k, v, 'important'); };
+    P(loc, 'position', 'absolute');
+    P(loc, 'left', mailIcon.offsetLeft + 'px');
+    P(loc, 'top', (mailIcon.offsetTop + pitch) + 'px');
+    P(loc, 'right', 'auto'); P(loc, 'bottom', 'auto'); P(loc, 'transform', 'none');
+    P(loc, 'gap', gap + 'px');
+    P(loc, 'align-items', 'flex-start');
+    P(icon, 'width', iconW + 'px');
+    P(icon, 'height', (mailIcon.offsetHeight || icon.getBoundingClientRect().height) + 'px');
+    /* text column starts at the same height as the Email label, relative to its icon */
+    var dy = label.offsetTop - mailIcon.offsetTop;
+    P(box, 'margin-top', dy + 'px');
+    var lab = getComputedStyle(label.firstElementChild || label), val = getComputedStyle(value.firstElementChild || value);
+    function font(el, cs) {
+      ['font-family', 'font-size', 'font-weight', 'font-style', 'line-height', 'letter-spacing', 'color', 'text-transform'].forEach(function (k) { P(el, k, cs.getPropertyValue(k)); });
+    }
+    font(title, lab); font(places, val);
+    P(title, 'margin', '0'); P(places, 'margin', '0');
+    /* same label -> value distance as the Email block */
+    var step = value.offsetTop - label.offsetTop;
+    if (step > 0) P(title, 'height', step + 'px');
+  }
   function fitLoc() {
+    alignLoc();
     var mobile = window.innerWidth <= 768;
     var wrap = document.querySelector(mobile ? '.responsive-mobile' : '.responsive-desktop');
     if (!wrap || !wrap.offsetWidth) return;
