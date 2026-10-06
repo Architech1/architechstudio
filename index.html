@@ -98,11 +98,8 @@ html.splash-lock,html.splash-lock body{overflow:hidden !important}
 <div id="Container">
 <div id="home-image-slider-1">
 <div class="pointer-events-none" id="Image">
-<!-- HERO SLIDESHOW (mobile): add/remove <img class="slide"> lines to change slides. First slide must have opacity:1, the rest opacity:0. -->
+<!-- HERO SLIDESHOW (mobile): filled automatically with ONLY the images in the "slider" folder (see script below). -->
 <div class="custom-slideshow hero-slideshow" style="position:absolute; inset:0; width:100%; height:100%; overflow:hidden; background:#111;">
-  <img src="gallery-images/alcove_img_1.jpg" class="slide" alt="Architectural interior project 1" draggable="false" decoding="async" fetchpriority="high" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; transition:opacity 1.5s ease-in-out; opacity:1;">
-  <img src="gallery-images/alcove_img_8.jpg" class="slide" alt="Architectural interior project 2" draggable="false" decoding="async" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; transition:opacity 1.5s ease-in-out; opacity:0;">
-  <img src="gallery-images/alcove_img_13.jpg" class="slide" alt="Architectural interior project 3" draggable="false" decoding="async" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; transition:opacity 1.5s ease-in-out; opacity:0;">
   <div class="hero-overlay" aria-hidden="true"></div>
 </div>
 </div>
@@ -641,9 +638,6 @@ html.splash-lock,html.splash-lock body{overflow:hidden !important}
 <div class="pointer-events-none" id="__17">
 <!-- HERO SLIDESHOW (desktop) -->
 <div class="custom-slideshow hero-slideshow" style="position:absolute; inset:0; width:100%; height:100%; overflow:hidden; background:#111;">
-  <img src="gallery-images/alcove_img_1.jpg" class="slide" alt="Architectural interior project 1" draggable="false" decoding="async" fetchpriority="high" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; transition:opacity 1.5s ease-in-out; opacity:1;">
-  <img src="gallery-images/alcove_img_8.jpg" class="slide" alt="Architectural interior project 2" draggable="false" decoding="async" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; transition:opacity 1.5s ease-in-out; opacity:0;">
-  <img src="gallery-images/alcove_img_13.jpg" class="slide" alt="Architectural interior project 3" draggable="false" decoding="async" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; transition:opacity 1.5s ease-in-out; opacity:0;">
   <div class="hero-overlay" aria-hidden="true"></div>
 </div>
 </div>
@@ -1231,12 +1225,12 @@ html.splash-lock,html.splash-lock body{overflow:hidden !important}
 <script>
 /* Hero slider: shows every image from the "slider" folder in the hero (mobile + desktop).
    For each folder name it tries: (1) images.json, (2) the server's folder listing, (3) numbered / common file names.
-   Open the browser console (F12) to see what was found. If nothing is found the original hero slides stay. */
+   Open the browser console (F12) to see what was found. The old built-in hero slides are removed. */
 (function () {
-  var DIRS = ['slider/', 'Slider/', 'sliders/', 'slider%20images/', 'slider-images/', 'slider_images/'];
+  var DIRS = ['slider/', 'Slider/', 'sliders/'];
   var EXT = /\.(jpe?g|png|webp|avif|gif)(\?.*)?$/i;
-  var EXTS = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'JPG', 'JPEG', 'PNG'];
-  var PREFIXES = ['', 'slide', 'slide-', 'slide_', 'slider', 'slider-', 'slider_', 'hero', 'hero-', 'hero_', 'img', 'img-', 'img_', 'image', 'image-', 'image_', 'photo', 'photo-', 'photo_'];
+  var EXTS = ['jpg', 'jpeg', 'png', 'webp', 'JPG', 'PNG'];
+  var PREFIXES = ['', 'slide', 'slide-', 'slide_', 'slider', 'slider-', 'img', 'img_', 'image', 'image-', 'image_'];
   var DELAY = 4500;    // ms each image stays on screen
 
   function log() { try { console.info.apply(console, ['[hero slider]'].concat([].slice.call(arguments))); } catch (e) {} }
@@ -1307,18 +1301,16 @@ html.splash-lock,html.splash-lock body{overflow:hidden !important}
 
   function build(urls) {
     var boxes = Array.prototype.slice.call(document.querySelectorAll('.hero-slideshow'));
-    if (!urls.length) { log('no images found. Add slider/images.json with your file names, or name files 1.jpg, 2.jpg ... Keeping original hero.'); return; }
+    if (!urls.length) { log('no images found. Add slider/images.json with your file names, or name files 1.jpg, 2.jpg ...'); return; }
     if (!boxes.length) return;
     var groups = boxes.map(function (box) {
-      Array.prototype.forEach.call(box.querySelectorAll('img.slide'), function (old) {
-        old.style.setProperty('visibility', 'hidden', 'important');
-      });
+      Array.prototype.forEach.call(box.querySelectorAll('img.slide'), function (old) { old.remove(); });   // only slider-folder images are shown
       var overlay = box.querySelector('.hero-overlay');
       return urls.map(function (u, i) {
         var im = document.createElement('img');
         im.className = 'hero-slide';
         im.src = u; im.alt = 'Project image ' + (i + 1); im.draggable = false; im.decoding = 'async';
-        if (i > 0) im.loading = 'lazy';
+        if (i === 0) im.fetchPriority = 'high'; else im.loading = 'lazy';
         im.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;transition:opacity 1.5s ease-in-out;opacity:' + (i === 0 ? 1 : 0) + ';';
         box.insertBefore(im, overlay || null);
         return im;
@@ -1353,16 +1345,12 @@ html.splash-lock,html.splash-lock body{overflow:hidden !important}
   function natural(a, b) { return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }); }
 
   /* ---------- find the videos ---------- */
-  function canLoad(url) {
-    return new Promise(function (resolve) {
-      var t = document.createElement('video'), done = false;
-      function finish(ok) { if (done) return; done = true; t.removeAttribute('src'); t.load(); resolve(ok); }
-      t.preload = 'metadata'; t.muted = true;
-      t.onloadedmetadata = function () { finish(true); };
-      t.onerror = function () { finish(false); };
-      setTimeout(function () { finish(false); }, 5000);
-      t.src = url;
-    });
+  function canLoad(url) {   // light HEAD request: no video data is downloaded
+    var ctl = window.AbortController ? new AbortController() : null;
+    var to = setTimeout(function () { if (ctl) ctl.abort(); }, 5000);
+    return fetch(url, { method: 'HEAD', signal: ctl ? ctl.signal : undefined }).then(function (r) {
+      clearTimeout(to); return r.ok;
+    }).catch(function () { clearTimeout(to); return false; });
   }
   function fromNumbered() {
     var out = [];
@@ -1407,74 +1395,6 @@ html.splash-lock,html.splash-lock body{overflow:hidden !important}
     }, Promise.resolve([]));
   }
 
-  /* ---------- best cover frame (like an Instagram reel cover) ----------
-     Samples a few moments of each video and keeps the sharpest, best-lit frame
-     (skips black / washed-out frames). Falls back to a fixed moment if the browser
-     blocks reading frames (e.g. page opened straight from disk). */
-  var coverCache = {};
-  function getCover(url) { return coverCache[url] || (coverCache[url] = pickCover(url)); }
-
-  function pickCover(url) {
-    return new Promise(function (resolve) {
-      var v = document.createElement('video');
-      v.muted = true; v.preload = 'auto'; v.playsInline = true;
-      var c = document.createElement('canvas');
-      var ctx = c.getContext('2d', { willReadFrequently: true });
-      var times = [], i = 0, finished = false;
-      var best = { score: -1, time: 0.3, poster: null };
-
-      function finish() {
-        if (finished) return; finished = true; clearTimeout(timer);
-        v.removeAttribute('src'); v.load(); resolve(best);
-      }
-      var timer = setTimeout(finish, 12000);
-      v.onerror = finish;
-
-      v.onloadedmetadata = function () {
-        var d = v.duration;
-        if (!isFinite(d) || d <= 0) return finish();
-        times = [0.12, 0.25, 0.4, 0.55].map(function (f) {
-          return Math.min(Math.max(0.4, d * f), Math.max(d - 0.2, 0));
-        });
-        best.time = times[Math.min(1, times.length - 1)];
-        v.currentTime = times[0];
-      };
-
-      v.onseeked = function () {
-        var vw = v.videoWidth, vh = v.videoHeight;
-        if (vw && vh) {
-          try {
-            var sw = 48, sh = Math.max(1, Math.round(48 * vh / vw));
-            c.width = sw; c.height = sh;
-            ctx.drawImage(v, 0, 0, sw, sh);
-            var px = ctx.getImageData(0, 0, sw, sh).data, n = sw * sh, sum = 0, sq = 0, k, y;
-            for (k = 0; k < px.length; k += 4) {
-              y = 0.299 * px[k] + 0.587 * px[k + 1] + 0.114 * px[k + 2];
-              sum += y; sq += y * y;
-            }
-            var mean = sum / n, std = Math.sqrt(Math.max(0, sq / n - mean * mean));
-            var score = std;
-            if (mean < 45) score *= mean / 45;            // too dark
-            if (mean > 220) score *= (255 - mean) / 35;   // too bright
-            if (score > best.score) {
-              best.score = score; best.time = v.currentTime;
-              var pw = Math.min(480, vw), ph = Math.round(pw * vh / vw);
-              c.width = pw; c.height = ph;
-              ctx.drawImage(v, 0, 0, pw, ph);
-              best.poster = c.toDataURL('image/jpeg', 0.82);
-            }
-          } catch (err) {            // frame reading blocked -> use the fixed fallback moment
-            best.poster = null;
-            return finish();
-          }
-        }
-        i++;
-        if (i < times.length) v.currentTime = times[i]; else finish();
-      };
-      v.src = url;
-    });
-  }
-
   /* ---------- your own thumbnails: thumbnail/1.jpg, 2.jpg ... ----------
      Video number N (1.mp4, 2.mp4 ...) gets thumbnail/N.jpg. If a number has no image,
      the card falls back to the automatic best-frame cover below. */
@@ -1508,12 +1428,6 @@ html.splash-lock,html.splash-lock body{overflow:hidden !important}
     return (thumbCache[n] = p);
   }
 
-  function applyCover(v, cover) {
-    if (!cover || v.dataset.started) return;
-    if (cover.poster) { v.poster = cover.poster; }
-    else if (cover.time) { v.dataset.seekCover = '1'; try { v.currentTime = cover.time; } catch (e) {} }
-  }
-
   /* ---------- playback ---------- */
   function allVideos() { return document.querySelectorAll('video.folder-video'); }
 
@@ -1532,11 +1446,39 @@ html.splash-lock,html.splash-lock body{overflow:hidden !important}
   function playVideo(v) {
     allVideos().forEach(function (o) { if (o !== v && !o.paused) o.pause(); });  // one at a time
     if (v.dataset.seekCover) { v.currentTime = 0; delete v.dataset.seekCover; }
+    loadSrc(v, 'auto');
     v.dataset.started = '1';
     v.muted = false; v.volume = 1;
     var p = v.play();
     if (p && p.catch) p.catch(function () {});
   }
+
+  /* ---------- SPEED TRICKS ----------
+     1) no video file is downloaded until the card is near the screen (IntersectionObserver)
+     2) cards with a thumbnail/N.jpg only show that small image - the video itself is fetched
+        the moment the visitor hovers / touches / clicks the card (warm-up), so play starts fast
+     3) cards without a thumbnail load just the first bytes and show a frame via #t=0.5
+     4) only one connection-friendly preload at a time: 'metadata' for visible, 'auto' on click */
+  function loadSrc(v, mode) {
+    if (!v.dataset.src) return;
+    if (!v.getAttribute('src')) {
+      v.preload = mode || 'metadata';
+      v.src = v.dataset.src;
+      if (mode !== 'auto') v.load();
+    } else if (mode === 'auto' && v.preload !== 'auto') {
+      v.preload = 'auto';
+    }
+  }
+  var io = ('IntersectionObserver' in window) ? new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      var v = en.target.querySelector('video');
+      io.unobserve(en.target);
+      if (!v) return;
+      if (v.dataset.hasThumb) return;                 // thumbnail is enough until the visitor interacts
+      loadSrc(v, 'metadata');                          // no thumbnail: grab first frame only
+    });
+  }, { rootMargin: '300px 300px' }) : null;
 
   function setupSlot(slot, url, index) {
     var v = slot.querySelector('video');
@@ -1544,12 +1486,15 @@ html.splash-lock,html.splash-lock body{overflow:hidden !important}
     v.muted = false; v.loop = false; v.autoplay = false;
     v.removeAttribute('autoplay'); v.removeAttribute('loop');
     v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
-    v.preload = 'metadata';
-    delete v.dataset.started; delete v.dataset.seekCover; delete v.dataset.hasThumb; v.removeAttribute('poster');
-    v.src = url;
+    v.preload = 'none';
+    delete v.dataset.started; delete v.dataset.seekCover; delete v.dataset.hasThumb; v.removeAttribute('poster'); v.removeAttribute('src');
+    v.dataset.src = url + (url.indexOf('#') === -1 ? '#t=0.5' : '');   // #t=0.5 -> browser shows a real frame as cover
     findThumb(videoNumber(url, index || 0)).then(function (thumb) {
-      if (thumb) { v.dataset.hasThumb = '1'; v.poster = thumb; }          // your numbered thumbnail
-      else { getCover(url).then(function (c) { applyCover(v, c); }); }    // no image -> automatic cover
+      if (thumb) { v.dataset.hasThumb = '1'; v.poster = thumb; }
+      if (io) io.observe(slot); else if (!thumb) loadSrc(v, 'metadata');
+    });
+    ['pointerenter', 'touchstart', 'focusin'].forEach(function (ev) {
+      slot.addEventListener(ev, function () { loadSrc(v, 'auto'); }, { passive: true, once: true });
     });
 
     slot.querySelectorAll('.vc-play').forEach(function (b) { b.remove(); });
@@ -1950,7 +1895,7 @@ html.splash-lock,html.splash-lock body{overflow:hidden !important}
     });
   }
 
-  function init() { startLayout(); firstNonEmpty([fromNumbered, fromListing, fromManifest]).then(apply); }
+  function init() { startLayout(); firstNonEmpty([fromManifest, fromListing, fromNumbered]).then(apply); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
 </script>
