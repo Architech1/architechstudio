@@ -93,12 +93,14 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 </style>
 <style id="contact-loc-css">
 /* Contact section: Location row styled like the Email row (dark text on white) */
-#Image_8.loc-row,#Image_23.loc-row{color:#000 !important;font-family:Inter,sans-serif;gap:19px}
-#Image_8.loc-row .loc-title,#Image_23.loc-row .loc-title{font-family:Poppins,sans-serif !important;font-weight:500 !important;font-size:16px !important;line-height:24px !important;color:#000 !important}
-#Image_8.loc-row .loc-places,#Image_23.loc-row .loc-places{font-family:Inter,sans-serif !important;font-weight:400 !important;font-size:12px !important;line-height:20px !important;margin-top:6px !important;color:#222 !important}
+#Image_8.loc-row,#Image_23.loc-row{color:#000 !important;font-family:Inter,sans-serif;gap:16px;align-items:flex-start !important}
+#Image_8.loc-row .loc-text,#Image_23.loc-row .loc-text{padding:0 !important}
+#Image_8.loc-row .loc-title,#Image_23.loc-row .loc-title{font-family:Poppins,sans-serif !important;font-weight:500 !important;font-size:16px !important;line-height:30px !important;color:#000 !important;margin:0 !important}
+#Image_8.loc-row .loc-places,#Image_23.loc-row .loc-places{font-family:Inter,sans-serif !important;font-weight:400 !important;font-size:12px !important;line-height:19px !important;margin:2px 0 0 !important;color:#222 !important;overflow-wrap:break-word !important}
 @media (min-width:769px){
-#Image_8.loc-row .loc-title,#Image_23.loc-row .loc-title{font-size:22px !important;line-height:32px !important}
-#Image_8.loc-row .loc-places,#Image_23.loc-row .loc-places{font-size:14px !important;line-height:22px !important;margin-top:8px !important}
+#Image_8.loc-row,#Image_23.loc-row{gap:19px}
+#Image_8.loc-row .loc-title,#Image_23.loc-row .loc-title{font-size:22px !important;line-height:38px !important}
+#Image_8.loc-row .loc-places,#Image_23.loc-row .loc-places{font-size:14px !important;line-height:22px !important;margin-top:2px !important}
 }
 </style>
 </head>
@@ -2008,7 +2010,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 })();
 </script>
 <script>
-/* "We are located at": width follows the real design canvas (390px mobile / 1920px desktop), so it fits every device */
+/* Contact "Location" row: fits the free space on every device, never runs under the form */
 (function () {
   function fitLoc() {
     var mobile = window.innerWidth <= 768;
@@ -2016,12 +2018,27 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
     if (!wrap || !wrap.offsetWidth) return;
     var base = mobile ? 390 : 1920, wr = wrap.getBoundingClientRect();
     var scale = wr.width / wrap.offsetWidth || 1;
+    var form = wrap.querySelector('#Background_Border_4');
+    var fr = form ? form.getBoundingClientRect() : null;
     wrap.querySelectorAll('.loc-row').forEach(function (el) {
+      var places = el.querySelector('.loc-places');
       el.style.removeProperty('--loc-w');
-      var left = (el.getBoundingClientRect().left - wr.left) / scale;
-      var room = base - left - (mobile ? 20 : 60);
-      var w = Math.max(160, Math.min(mobile ? 320 : 560, room));
+      if (places) places.style.removeProperty('font-size');
+      var r = el.getBoundingClientRect();
+      var left = (r.left - wr.left) / scale;
+      var right = base - (mobile ? 20 : 60);
+      /* desktop: form sits to the right -> stop 40px before it */
+      if (!mobile && fr && fr.left > r.left) right = Math.min(right, (fr.left - wr.left) / scale - 40);
+      var w = Math.max(160, Math.min(mobile ? 330 : 560, right - left));
       el.style.setProperty('--loc-w', Math.floor(w) + 'px');
+      /* mobile: form sits below -> shrink text a little if it would touch the form */
+      if (mobile && fr && places) {
+        var fs = parseFloat(getComputedStyle(places).fontSize) || 12;
+        var guard = 0;
+        while (guard++ < 3 && fs > 10 && el.getBoundingClientRect().bottom > fr.top - 12 * scale) {
+          fs -= 1; places.style.setProperty('font-size', fs + 'px', 'important');
+        }
+      }
     });
   }
   var t; function later() { clearTimeout(t); t = setTimeout(fitLoc, 120); }
@@ -2029,6 +2046,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
   window.addEventListener('orientationchange', later, { passive: true });
   window.addEventListener('load', function () { fitLoc(); setTimeout(fitLoc, 600); });
   document.addEventListener('DOMContentLoaded', function () { setTimeout(fitLoc, 150); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitLoc);
 })();
 </script>
 </body>
