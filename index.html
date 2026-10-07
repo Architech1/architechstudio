@@ -93,12 +93,14 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 </style>
 <style id="contact-loc-css">
 /* Contact section: Location row styled like the Email row (dark text on white) */
-#Image_8.loc-row,#Image_23.loc-row{color:#000 !important;font-family:Inter,sans-serif;gap:16px;align-items:flex-start !important}
+#Image_8.loc-row,#Image_23.loc-row{color:#000 !important;font-family:Inter,sans-serif;gap:16px;align-items:flex-start !important;box-sizing:border-box !important;width:var(--loc-w,300px) !important;min-width:200px !important;max-width:none !important;height:auto !important}
+#Image_8.loc-row .loc-text,#Image_23.loc-row .loc-text{flex:1 1 0 !important;min-width:0 !important;width:auto !important;display:block !important}
+#Image_8.loc-row .loc-title,#Image_23.loc-row .loc-title,#Image_8.loc-row .loc-places,#Image_23.loc-row .loc-places{white-space:normal !important;word-break:normal !important;overflow-wrap:normal !important;display:block !important;width:auto !important}
 #Image_8.loc-row .loc-text,#Image_23.loc-row .loc-text{padding:0 !important}
 #Image_8.loc-row .loc-title,#Image_23.loc-row .loc-title{font-family:Poppins,sans-serif !important;font-weight:500 !important;font-size:16px !important;line-height:30px !important;color:#000 !important;margin:0 !important}
 #Image_8.loc-row .loc-places,#Image_23.loc-row .loc-places{font-family:Inter,sans-serif !important;font-weight:400 !important;font-size:12px !important;line-height:19px !important;margin:2px 0 0 !important;color:#222 !important;overflow-wrap:break-word !important}
 @media (min-width:769px){
-#Image_8.loc-row,#Image_23.loc-row{gap:19px}
+#Image_8.loc-row,#Image_23.loc-row{gap:19px;width:var(--loc-w,520px) !important}
 #Image_8.loc-row .loc-title,#Image_23.loc-row .loc-title{font-size:22px !important;line-height:38px !important}
 #Image_8.loc-row .loc-places,#Image_23.loc-row .loc-places{font-size:14px !important;line-height:22px !important;margin-top:2px !important}
 }
