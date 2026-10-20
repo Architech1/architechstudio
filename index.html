@@ -83,7 +83,7 @@ window.addEventListener('resize',g,true);if(window.visualViewport)window.visualV
 <script>/* earliest possible preload of the first hero image + first video thumbnails (urls remembered from the previous visit) */
 (function(){try{function pl(u){var l=document.createElement('link');l.rel='preload';l.as='image';l.href=u;l.setAttribute('fetchpriority','high');document.head.appendChild(l);}
 var h=JSON.parse(localStorage.getItem('heroUrls')||'[]');pl('slider/2.jpg');
-var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1;i<=3;i++)pl(t.d+i+'.'+t.e);}else{for(var j=1;j<=3;j++)pl('thumbnail/'+j+'.jpg');}}catch(e){}})();</script>
+var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1;i<=5;i++)pl(t.d+i+'.'+t.e);}else{for(var j=1;j<=5;j++)pl('thumbnail/'+j+'.jpg');}}catch(e){}})();</script>
 <style id="loc-css">
 /* "We are located at" row: icon + text sit side by side and wrap by themselves (mobile + desktop) */
 .loc-row{display:flex !important;flex-direction:row !important;align-items:flex-start !important;justify-content:flex-start !important;gap:12px;
@@ -1417,6 +1417,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
   }
   var thumbPattern = null, patternP = null;
   try { thumbPattern = JSON.parse(localStorage.getItem('thumbPattern') || 'null'); } catch (e) {}
+  if (!thumbPattern) thumbPattern = { d: 'thumbnail/', e: 'jpg' };   // thumbnails are thumbnail/1.jpg ... 5.jpg
   function probe(list) {      // all candidates at once; first one (in list order) that exists wins
     return Promise.all(list.map(function (src) { return imageExists(src).then(function (ok) { return ok ? src : null; }); }))
       .then(function (r) { return r.filter(Boolean)[0] || null; });
@@ -1946,7 +1947,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
         var c = Array.prototype.filter.call(tr.children, function (el) { return el.tagName === 'DIV'; }).length;
         if (c > nSlots) nSlots = c;
       });
-      var temp = []; for (var k = 1; k <= nSlots; k++) temp.push(DIR + k + '.mp4');
+      var temp = []; for (var k = 1; k <= Math.min(nSlots, 5); k++) temp.push(DIR + k + '.mp4');
       if (temp.length) apply(temp);            // provisional: only thumbnail/N.jpg images; real list replaces it below
     }
     discover().then(function (list) {
