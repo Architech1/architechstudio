@@ -1,19 +1,3 @@
-/* Instagram video thumbnails: start fetching + decoding thumbnail/1..5.jpg the instant this script runs,
-   so they are already in the browser cache when the video cards are built. */
-(function () {
-  try {
-    var p = null; try { p = JSON.parse(localStorage.getItem("thumbPattern") || "null"); } catch (e) {}
-    var d = (p && p.d) || "thumbnail/", x = (p && p.e) || "jpg";
-    window.__thumbPrime = [];
-    for (var i = 1; i <= 5; i++) {
-      var im = new Image();
-      im.decoding = "async"; im.fetchPriority = "high";
-      im.src = d + i + "." + x;
-      window.__thumbPrime.push(im);
-    }
-  } catch (e) {}
-})();
-
 (function () {
   "use strict";
 
@@ -164,11 +148,7 @@
   window.addEventListener("resize", debouncedFit, { passive: true });
   window.addEventListener("orientationchange", debouncedFit, { passive: true });
   if (window.visualViewport) window.visualViewport.addEventListener("resize", debouncedFit, { passive: true });
-  document.addEventListener("DOMContentLoaded", function () {
-    fitExactDesign();
-    requestAnimationFrame(positionInstaCta);   // Instagram button placed on the first frame, not after load
-    setTimeout(positionInstaCta, 120);
-  });
+  document.addEventListener("DOMContentLoaded", fitExactDesign);
   window.addEventListener("load", function () { fitExactDesign(); setTimeout(positionInstaCta, 900); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(positionInstaCta);
   fitExactDesign();
@@ -324,41 +304,3 @@ if (document.readyState === 'loading') {
 } else {
   initMainGalleryScrollAnimation();
 }
-
-
-/* Close the empty gap between "VIEW ON INSTAGRAM" and SERVICES: the section below is pulled up
-   so the distance from the button to the SERVICES heading is a fixed, tidy value on every device. */
-(function () {
-  var WANT = { mobile: 70, desktop: 100 };   // design px: button bottom -> SERVICES heading
-  function close() {
-    var isMobile = window.innerWidth <= 768;
-    var wrapper = document.querySelector(isMobile ? '.responsive-mobile' : '.responsive-desktop');
-    if (!wrapper) return;
-    var cta = wrapper.querySelector('#Mention_Widget'), svc = wrapper.querySelector('#services_section');
-    if (!cta || !svc || !svc.parentElement) return;
-    var block = svc.parentElement;                       // holds Services and everything below it
-    block.style.removeProperty('translate'); document.body.style.marginBottom = '0';
-    var wr = wrapper.getBoundingClientRect();
-    var scale = wrapper.offsetWidth ? wr.width / wrapper.offsetWidth : 1;
-    if (!scale || !isFinite(scale)) scale = 1;
-    var head = svc.querySelector('[id^="Heading_2_SERVICES"]') || svc;
-    var gap = (head.getBoundingClientRect().top - cta.getBoundingClientRect().bottom) / scale;
-    var delta = gap - WANT[isMobile ? 'mobile' : 'desktop'];
-    if (delta > 1 && delta < 1500) {
-      block.style.setProperty('translate', '0 ' + (-delta).toFixed(2) + 'px');
-      document.body.style.marginBottom = (-delta * scale).toFixed(1) + 'px';
-    }
-  }
-  var t;
-  var lastW = window.innerWidth, raf = 0;
-  document.documentElement.style.overflowAnchor = 'none';
-  function soon() {              // same frame as the layout refit -> no visible jump while scrolling
-    if (raf) cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(function () { raf = requestAnimationFrame(function () { raf = 0; lastW = window.innerWidth; close(); clearTimeout(t); t = setTimeout(close, 250); }); });
-  }
-  if (window.visualViewport) window.visualViewport.addEventListener('resize', soon, { passive: true });
-  window.addEventListener('orientationchange', soon, { passive: true });
-  window.addEventListener('resize', soon, { passive: true });
-  window.addEventListener('load', function () { soon(); setTimeout(close, 1000); setTimeout(close, 2500); });
-  document.addEventListener('DOMContentLoaded', function () { requestAnimationFrame(close); setTimeout(close, 120); setTimeout(close, 400); });
-})();
