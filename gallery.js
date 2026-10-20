@@ -1,13 +1,17 @@
-// gallery.js - Minimalist Image Grid Lightbox (auto-loads every image from gallery-images/)
+// gallery.js - Ultra-fast image grid + lightbox with skeleton loading
+// Tricks used: instant skeletons, cached file list (stale-while-revalidate), parallel discovery,
+// HEAD probing (no image downloads while searching), fetchpriority for above-the-fold images,
+// async decode + fade-in, hover/neighbor prefetch for the lightbox.
 document.addEventListener('DOMContentLoaded', () => {
   const DIR = 'gallery-images/';
   const EXT = /\.(jpe?g|png|webp|avif|gif|svg)$/i;
-
-  // Fallback pattern probing (used only if the folder cannot be listed)
-  const PREFIXES = ['alcove_img_', '']; // alcove_img_1.jpg ... or 1.jpg ...
+  const PREFIXES = ['alcove_img_', ''];
   const PROBE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'];
   const MAX_NUMBER = 300;
-  const STOP_AFTER_MISSES = 10; // gaps like 16,17 / 20,21 are fine
+  const CHUNK = 10;            // numbers probed in parallel
+  const EAGER_COUNT = 6;       // first images load with high priority
+  const SKELETON_COUNT = 12;
+  const CACHE_KEY = 'gallery:list:v1';
 
   const grid = document.getElementById('minimalGrid');
   const lightbox = document.getElementById('minimalLightbox');
@@ -18,11 +22,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let images = [];
   let currentIndex = 0;
+  const prefetched = new Set();
 
-  /* ---------- 1. find the images ---------- */
   const byName = (a, b) => a.localeCompare(b, undefined, { numeric: true });
 
-  // Option A: optional gallery-images/gallery.json  (["a.jpg","b.png", ...])
+  /* ---------- 0. instant skeletons (shown before anything is fetched) ---------- */
+  function showSkeletons(n) {
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < n; i++) {
+      const s = document.createElement('div');
+      s.className = 'grid-item skeleton visible';
+      frag.appendChild(s);
+    }
+    grid.textContent = '';
+    grid.appendChild(frag);
+  }
+
+  /* ---------- 1. cache (stale-while-revalidate) ---------- */
+  const readCache = () => {
+    try { const l = JSON.parse(localStorage.getItem(CACHE_KEY)); return Array.isArray(l) && l.length ? l : null; }
+    catch { return null; }
+  };
+  const writeCache = list => { try { localStorage.setItem(CACHE_KEY, JSON.stringify(list)); } catch {} };
+
+  /* ---------- 2. discovery ---------- */
   function fromManifest() {
     return fetch(DIR + 'gallery.json', { cache: 'no-cache' })
       .then(r => { if (!r.ok) throw 0; return r.json(); })
@@ -32,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  // Option B: the folder's directory listing (local servers, Apache, nginx autoindex...)
   function fromListing() {
     return fetch(DIR, { cache: 'no-cache' })
       .then(r => { if (!r.ok) throw 0; return r.text(); })
@@ -48,58 +70,108 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  // Option C: probe numbered names (alcove_img_1.jpg, alcove_img_2.png, 3.jpg ...)
-  function probe(src) {
-    return new Promise(res => {
-      const i = new Image();
-      i.onload = () => res(src);
-      i.onerror = () => res(null);
-      i.src = src;
-    });
+  // HEAD request: checks existence without downloading the image. Falls back to <img> (file://).
+  async function exists(src) {
+    try {
+      const r = await fetch(src, { method: 'HEAD' });
+      return r.ok && (r.headers.get('content-type') || '').startsWith('image') ? src : null;
+    } catch {
+      return new Promise(res => {
+        const i = new Image();
+        i.onload = () => res(src);
+        i.onerror = () => res(null);
+        i.src = src;
+      });
+    }
   }
+
   async function fromProbing() {
+    // Step 1: detect which prefix the files use (only checks the first few numbers)
+    let prefix = null;
+    for (const p of PREFIXES) {
+      const hits = await Promise.all([1, 2, 3].flatMap(n => PROBE_EXTS.map(e => exists(`${DIR}${p}${n}.${e}`))));
+      if (hits.some(Boolean)) { prefix = p; break; }
+    }
+    if (prefix === null) throw 0;
+
+    // Step 2: probe in big parallel chunks with that prefix only
     const found = [];
-    let misses = 0;
-    for (let n = 1; n <= MAX_NUMBER && misses < STOP_AFTER_MISSES; n++) {
-      const tries = [];
-      PREFIXES.forEach(p => PROBE_EXTS.forEach(e => tries.push(probe(`${DIR}${p}${n}.${e}`))));
-      const hit = (await Promise.all(tries)).find(Boolean);
-      if (hit) { found.push(hit); misses = 0; } else { misses++; }
+    let emptyChunks = 0;
+    for (let start = 1; start <= MAX_NUMBER && emptyChunks < 2; start += CHUNK) {
+      const nums = Array.from({ length: CHUNK }, (_, i) => start + i);
+      const results = await Promise.all(
+        nums.map(async n => (await Promise.all(PROBE_EXTS.map(e => exists(`${DIR}${prefix}${n}.${e}`)))).find(Boolean))
+      );
+      const hits = results.filter(Boolean);
+      found.push(...hits);
+      emptyChunks = hits.length ? 0 : emptyChunks + 1;
     }
     if (!found.length) throw 0;
     return found;
   }
 
-  /* ---------- 2. build the grid ---------- */
+  // manifest and folder listing race each other; probing is the last resort
+  const discover = () =>
+    Promise.any([fromManifest(), fromListing()]).catch(fromProbing);
+
+  /* ---------- 3. build the grid ---------- */
   function buildGrid(srcs) {
-    grid.textContent = '';
-    srcs.forEach(src => {
+    const frag = document.createDocumentFragment();
+    srcs.forEach((src, i) => {
       const item = document.createElement('div');
-      item.className = 'grid-item';
+      item.className = 'grid-item loading';
       const img = document.createElement('img');
-      img.src = src;
       img.alt = '';
-      img.loading = 'lazy';
-      img.addEventListener('error', () => item.remove()); // skip broken files
+      img.decoding = 'async';
+      if (i < EAGER_COUNT) { img.loading = 'eager'; img.fetchPriority = 'high'; }
+      else { img.loading = 'lazy'; img.fetchPriority = 'low'; }
+
+      const reveal = () => {
+        // decode off the main thread first so the fade-in never janks
+        (img.decode ? img.decode().catch(() => {}) : Promise.resolve()).then(() => {
+          img.classList.add('loaded');
+          item.classList.remove('loading');
+        });
+      };
+      img.addEventListener('load', reveal, { once: true });
+      img.addEventListener('error', () => item.remove(), { once: true });
+      img.src = src; // set src AFTER listeners are attached
+      if (img.complete && img.naturalWidth) reveal(); // already cached
+
       item.appendChild(img);
-      grid.appendChild(item);
+      frag.appendChild(item);
     });
-    setupLightbox();
+    grid.textContent = '';
+    grid.appendChild(frag);
     setupScrollAnimation();
   }
 
-  /* ---------- 3. lightbox ---------- */
-  function currentList() {
-    return Array.from(grid.querySelectorAll('.grid-item img')).map(i => i.src);
+  /* ---------- 4. lightbox ---------- */
+  const currentList = () => Array.from(grid.querySelectorAll('.grid-item img')).map(i => i.src);
+
+  function prefetch(src) {
+    if (!src || prefetched.has(src)) return;
+    prefetched.add(src);
+    const i = new Image();
+    i.decoding = 'async';
+    i.src = src;
+    i.decode && i.decode().catch(() => {});
   }
 
   function openLightbox(index) {
     images = currentList();
     if (!images.length) return;
     currentIndex = (index + images.length) % images.length;
-    lbImg.src = images[currentIndex];
+    const src = images[currentIndex];
+    lbImg.classList.remove('loaded');
+    lbImg.onload = () => lbImg.classList.add('loaded');
+    lbImg.src = src; // already in the HTTP cache from the grid = instant
+    if (lbImg.complete) lbImg.classList.add('loaded');
     lightbox.classList.add('active');
     document.body.style.overflow = 'hidden';
+    // warm up neighbours so next/prev feel instant
+    prefetch(images[(currentIndex + 1) % images.length]);
+    prefetch(images[(currentIndex - 1 + images.length) % images.length]);
   }
   function closeLightbox() {
     lightbox.classList.remove('active');
@@ -108,26 +180,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const nextImage = () => openLightbox(currentIndex + 1);
   const prevImage = () => openLightbox(currentIndex - 1);
 
-  function setupLightbox() {
-    grid.addEventListener('click', e => {
-      const item = e.target.closest('.grid-item');
-      if (!item) return;
-      openLightbox(Array.from(grid.children).indexOf(item));
-    });
-  }
+  // one delegated listener (never re-added when the grid rebuilds)
+  const indexOfItem = item => Array.from(grid.querySelectorAll('.grid-item:not(.skeleton)')).indexOf(item);
+  grid.addEventListener('click', e => {
+    const item = e.target.closest('.grid-item');
+    if (!item || item.classList.contains('skeleton')) return;
+    openLightbox(indexOfItem(item));
+  });
+  // prefetch the full image the moment the pointer hovers a tile
+  grid.addEventListener('pointerover', e => {
+    const img = e.target.closest('.grid-item img');
+    if (img) prefetch(img.src);
+  });
 
   if (lbClose) lbClose.addEventListener('click', closeLightbox);
   if (lbNext) lbNext.addEventListener('click', e => { e.stopPropagation(); nextImage(); });
   if (lbPrev) lbPrev.addEventListener('click', e => { e.stopPropagation(); prevImage(); });
-
   if (lightbox) {
     lightbox.addEventListener('click', e => {
-      if (e.target === lightbox || e.target.classList.contains('lightbox-image-wrapper')) {
-        closeLightbox();
-      }
+      if (e.target === lightbox || e.target.classList.contains('lightbox-image-wrapper')) closeLightbox();
     });
   }
-
   document.addEventListener('keydown', e => {
     if (!lightbox.classList.contains('active')) return;
     if (e.key === 'Escape') closeLightbox();
@@ -135,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'ArrowLeft') prevImage();
   });
 
-  /* ---------- 4. scroll animation ---------- */
+  /* ---------- 5. scroll animation ---------- */
   function setupScrollAnimation() {
     const observer = new IntersectionObserver((entries, obs) => {
       entries.forEach(entry => {
@@ -147,20 +220,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { root: null, rootMargin: '0px 0px -50px 0px', threshold: 0.1 });
 
     grid.querySelectorAll('.grid-item').forEach((item, idx) => {
-      // staggered delay based on column (roughly 3 columns)
       item.style.transitionDelay = `${(idx % 3) * 100}ms, ${(idx % 3) * 100}ms, 0s, 0s`;
       observer.observe(item);
-      // clear delay after the animation so hover effects are instant
       item.addEventListener('transitionend', function (e) {
-        if (e.propertyName === 'opacity' || e.propertyName === 'transform') {
-          this.style.transitionDelay = '0s';
-        }
+        if (e.propertyName === 'opacity' || e.propertyName === 'transform') this.style.transitionDelay = '0s';
       });
     });
   }
 
   /* ---------- go ---------- */
-  fromManifest().catch(fromListing).catch(fromProbing)
-    .then(buildGrid)
-    .catch(() => console.warn('gallery.js: no images found in ' + DIR));
+  const cached = readCache();
+  showSkeletons(cached ? Math.min(cached.length, 24) : SKELETON_COUNT);
+
+  if (cached) buildGrid(cached); // instant paint on repeat visits
+
+  discover()
+    .then(fresh => {
+      const changed = !cached || fresh.length !== cached.length || fresh.some((s, i) => s !== cached[i]);
+      if (changed) buildGrid(fresh);
+      writeCache(fresh);
+    })
+    .catch(() => {
+      if (!cached) { grid.textContent = ''; console.warn('gallery.js: no images found in ' + DIR); }
+    });
 });
