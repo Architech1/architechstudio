@@ -1264,6 +1264,33 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
   function readCache() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } }
   function writeCache(a) { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }
 
+  /* Some photos contain solid black bars on one side (export / screenshot padding). object-fit:cover can't remove those,
+     so they show up as a black cut in the hero. This finds pure-black edge bands (>= 1% of the image) and crops them away
+     with object-view-box. Real dark photos are not touched: a band must be near-black on >= 98% of its rows/columns. */
+  function trimBlackBorders(im) {
+    try {
+      if (im.dataset.trimmed || !im.naturalWidth || !('objectViewBox' in document.documentElement.style)) return;
+      im.dataset.trimmed = '1';
+      var W = 240, H = Math.max(1, Math.round(W * im.naturalHeight / im.naturalWidth));
+      var c = document.createElement('canvas'); c.width = W; c.height = H;
+      var x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0, W, H);
+      var d = x.getImageData(0, 0, W, H).data;
+      function dark(px, py) { var k = (py * W + px) * 4; return (d[k] * 0.299 + d[k + 1] * 0.587 + d[k + 2] * 0.114) < 14; }
+      function colDark(px) { var n = 0; for (var y = 0; y < H; y++) if (dark(px, y)) n++; return n / H >= 0.98; }
+      function rowDark(py) { var n = 0; for (var q = 0; q < W; q++) if (dark(q, py)) n++; return n / W >= 0.98; }
+      var L = 0, R = 0, T = 0, B = 0;
+      while (L < W * 0.4 && colDark(L)) L++;
+      while (R < W * 0.4 && colDark(W - 1 - R)) R++;
+      while (T < H * 0.4 && rowDark(T)) T++;
+      while (B < H * 0.4 && rowDark(H - 1 - B)) B++;
+      function pct(v, total) { return v / total * 100 >= 1 ? ((v + 1) / total * 100).toFixed(2) + '%' : '0%'; }   // +1 sample: also hides the soft edge
+      var l = pct(L, W), r = pct(R, W), t = pct(T, H), b = pct(B, H);
+      if (l === '0%' && r === '0%' && t === '0%' && b === '0%') return;
+      im.style.objectViewBox = 'inset(' + t + ' ' + r + ' ' + b + ' ' + l + ')';
+      log('trimmed black bars', im.dataset.src, { top: t, right: r, bottom: b, left: l });
+    } catch (e) { /* canvas blocked (file:// or cross-origin): leave the image as is */ }
+  }
+
   function build(urls) {
     var boxes = Array.prototype.slice.call(document.querySelectorAll('.hero-slideshow'));
     if (!urls.length) { log('no images found. Add slider/images.json with your file names, or name files 1.jpg, 2.jpg ...'); return; }
@@ -1275,6 +1302,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
         var im = document.createElement('img');
         im.className = 'hero-slide';
         im.alt = 'Project image ' + (i + 1); im.draggable = false; im.decoding = 'async'; im.dataset.src = u;
+        im.addEventListener('load', function () { trimBlackBorders(im); });   // crop black bars that are baked into a photo
         if (i === 0) im.src = u;                 // only the first image loads now; the next ones load one after another
         if (i === 0) { im.fetchPriority = 'high'; im.loading = 'eager';
           im.onerror = function () { writeCache([]); if (!im.dataset.retry) { im.dataset.retry = 1; find().then(function (f) { if (f.length) { writeCache(f); build(f); } else if (urls !== FALLBACK) build(FALLBACK); }); } };
