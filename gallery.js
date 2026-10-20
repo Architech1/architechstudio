@@ -5,6 +5,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const DIR = 'gallery-images/';
   const EXT = /\.(jpe?g|png|webp|avif|gif|svg)$/i;
+  const PREFIXES = ['alcove_img_', '']; // fallback names only: alcove_img_1.jpg / 1.jpg
   const PROBE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif', 'JPG', 'JPEG', 'PNG', 'WEBP'];
   const MAX_NUMBER = 500;
   const CHUNK = 8;             // numbers probed in parallel
@@ -90,14 +91,14 @@ document.addEventListener('DOMContentLoaded', () => {
     return imgProbe(src);
   }
 
-  // Last resort only (no listing, no manifest): plain numbered names 1.jpg, 2.png ...
+  // Last resort only (no listing, no manifest): numbered names like alcove_img_1.jpg or 1.png
   async function fromProbing() {
     const found = [];
     let emptyChunks = 0;
     for (let start = 0; start <= MAX_NUMBER && emptyChunks < 3; start += CHUNK) {
       const nums = Array.from({ length: CHUNK }, (_, i) => start + i);
       const results = await Promise.all(
-        nums.map(async n => (await Promise.all(PROBE_EXTS.map(e => exists(`${DIR}${n}.${e}`)))).find(Boolean))
+        nums.flatMap(n => PREFIXES.map(async p => (await Promise.all(PROBE_EXTS.map(e => exists(`${DIR}${p}${n}.${e}`)))).find(Boolean)))
       );
       const hits = results.filter(Boolean);
       found.push(...hits);
@@ -238,6 +239,13 @@ document.addEventListener('DOMContentLoaded', () => {
       writeCache(fresh);
     })
     .catch(() => {
-      if (!cached) { grid.textContent = ''; console.warn('gallery.js: no images found in ' + DIR); }
+      if (!cached) {
+        grid.textContent = '';
+        const msg = document.createElement('p');
+        msg.style.cssText = 'grid-column:1/-1;text-align:center;padding:2rem;opacity:.7;font:14px system-ui,sans-serif';
+        msg.textContent = 'No images found. Add gallery-images/gallery.json (run: node make-gallery-json.js) and open the site through a web server, not file://.';
+        grid.appendChild(msg);
+        console.warn('gallery.js: no images found in ' + DIR);
+      }
     });
 });
