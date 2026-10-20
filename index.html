@@ -2080,5 +2080,90 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitLoc);
 })();
 </script>
+<style id="founder-slide-fix">
+/* Founder slider: let every slide's quote use the width the card really has */
+.founder-card-slider .founder-slide{box-sizing:border-box;max-width:100%}
+.founder-card-slider .founder-slide > span.text,
+.founder-card-slider .founder-slide > span.text > span{max-width:100%;overflow-wrap:break-word;word-break:normal;hyphens:auto}
+.founder-card-slider .founder-slide[data-fit="1"] > span.text{white-space:normal !important;overflow:visible !important;text-overflow:clip !important;height:auto !important}
+.founder-card-slider .founder-slide[data-fit="1"] > span.text br{display:none}
+</style>
+<script id="founder-slide-fix-js">
+/* Founder slider (slide 2 etc.): measures each quote against its card and fixes clipping.
+   - width: if the text runs past the card's right edge (or is clipped), it is re-wrapped inside the free width
+   - height: if it then gets too tall, the font shrinks step by step (never below 70%)
+   Re-runs on slide change, resize, rotation, font load and when the page layout script rescales things. */
+(function () {
+  var PAD = 14, MIN_SCALE = 0.7, STEP = 0.04;
+
+  function reset(slide, q) {
+    slide.removeAttribute('data-fit');
+    ['width', 'max-width', 'font-size', 'line-height', 'left', 'right', 'text-align'].forEach(function (p) {
+      if (q.dataset['ff_' + p]) { q.style.removeProperty(p); delete q.dataset['ff_' + p]; }
+    });
+  }
+  function set(q, p, v) { q.dataset['ff_' + p] = '1'; q.style.setProperty(p, v, 'important'); }
+
+  function fitSlide(slide) {
+    var q = slide.querySelector(':scope > span.text');
+    var card = slide.closest('.founder-card-slider');
+    if (!q || !card) return;
+    var cs = getComputedStyle(slide);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return;          // only measure the visible slide
+    reset(slide, q);
+
+    var cr = card.getBoundingClientRect();
+    if (!cr.width) return;
+    var scale = cr.width / (card.offsetWidth || cr.width) || 1;                // page may be scaled by transform
+    var qr = q.getBoundingClientRect();
+    var clipped = q.scrollWidth > q.clientWidth + 1 ||
+                  qr.right > cr.right - 1 || qr.left < cr.left - 1 ||
+                  (q.firstElementChild && q.firstElementChild.getBoundingClientRect().right > cr.right + 1);
+    if (!clipped) return;
+
+    slide.setAttribute('data-fit', '1');
+    var free = (cr.right - qr.left) / scale - PAD;                              // room from the text's left edge to card edge
+    if (free < 120) {                                                           // text starts too far right: pull it back
+      set(q, 'left', PAD + 'px'); set(q, 'right', 'auto');
+      free = card.offsetWidth - PAD * 2;
+    }
+    set(q, 'width', Math.floor(free) + 'px');
+    set(q, 'max-width', Math.floor(free) + 'px');
+
+    /* height guard: shrink the font until the text sits inside the card */
+    var fs = parseFloat(getComputedStyle(q).fontSize) || 16, base = fs, lh = parseFloat(getComputedStyle(q).lineHeight);
+    var guard = 0;
+    while (guard++ < 12 && fs > base * MIN_SCALE &&
+           q.getBoundingClientRect().bottom > card.getBoundingClientRect().bottom - PAD * scale) {
+      fs -= base * STEP;
+      set(q, 'font-size', fs.toFixed(2) + 'px');
+      if (lh) set(q, 'line-height', (lh * fs / base).toFixed(2) + 'px');
+    }
+  }
+
+  function fitAll() {
+    document.querySelectorAll('.founder-card-slider .founder-slide').forEach(fitSlide);
+  }
+  var t;
+  function later(ms) { clearTimeout(t); t = setTimeout(fitAll, ms || 80); }
+
+  function init() {
+    fitAll();
+    document.querySelectorAll('.founder-card-slider .founder-slide').forEach(function (s) {
+      new MutationObserver(function () { later(30); })                         // slide became active -> measure it now
+        .observe(s, { attributes: true, attributeFilter: ['class', 'style'] });
+    });
+    document.querySelectorAll('.founder-card-slider').forEach(function (c) {
+      if (window.ResizeObserver) new ResizeObserver(function () { later(60); }).observe(c);
+    });
+    window.addEventListener('resize', function () { later(120); }, { passive: true });
+    window.addEventListener('orientationchange', function () { later(250); }, { passive: true });
+    window.addEventListener('load', function () { fitAll(); setTimeout(fitAll, 700); setTimeout(fitAll, 2000); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { later(0); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+
 </body>
 </html>
