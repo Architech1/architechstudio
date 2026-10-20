@@ -1398,7 +1398,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
   /* ---------- your own thumbnails: thumbnail/1.jpg, 2.jpg ... ----------
      Video number N (1.mp4, 2.mp4 ...) gets thumbnail/N.jpg. If a number has no image,
      the card falls back to the automatic best-frame cover below. */
-  var THUMB_DIRS = ['thumbnail/', 'thumbnails/'];
+  var THUMB_DIRS = ['thumbnail/', 'thumbnails/', 'Thumbnail/', 'Thumbnails/', 'thumb/'];
   var THUMB_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'JPG', 'JPEG', 'PNG', 'WEBP'];
   var thumbCache = {};
 
@@ -1417,7 +1417,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
   }
   var thumbPattern = null, patternP = null;
   try { thumbPattern = JSON.parse(localStorage.getItem('thumbPattern') || 'null'); } catch (e) {}
-  if (!thumbPattern) thumbPattern = { d: 'thumbnail/', e: 'jpg' };   // thumbnails are thumbnail/1.jpg ... 5.jpg
+  if (!thumbPattern || typeof thumbPattern.d !== 'string' || typeof thumbPattern.e !== 'string') thumbPattern = { d: 'thumbnail/', e: 'jpg' };   // thumbnails are thumbnail/1.jpg ... 5.jpg
   function probe(list) {      // all candidates at once; first one (in list order) that exists wins
     return Promise.all(list.map(function (src) { return imageExists(src).then(function (ok) { return ok ? src : null; }); }))
       .then(function (r) { return r.filter(Boolean)[0] || null; });
@@ -1520,7 +1520,12 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
         ti.onerror = null;
         findThumb(n).then(function (thumb) {
           if (thumb && thumb !== guess) { ti.src = thumb; }
-          else if (!thumb) { ti.remove(); delete v.dataset.hasThumb; loadSrc(v, 'metadata'); }
+          else if (!thumb) {
+            try { console.warn('[insta cards] thumbnail not found for video ' + n + ' (tried ' + guess + ') - showing the first video frame instead'); } catch (e) {}
+            ti.remove(); delete v.dataset.hasThumb;
+            loadSrc(v, 'auto');                     // fetch the first frames so the card shows a picture, not black
+            v.addEventListener('loadeddata', function () { try { if (v.paused && !v.dataset.started && v.currentTime < 0.1) v.currentTime = 0.5; } catch (e) {} }, { once: true });
+          }
         });
       };
       ti.src = guess;
