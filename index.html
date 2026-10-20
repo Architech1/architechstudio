@@ -116,7 +116,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
   <div class="sp-bar" aria-hidden="true"></div>
 </div>
 <script>
-/* Splash: hides as soon as the DOM + first hero image are ready (min 4s, hard stop 6s). */
+/* Splash: hides as soon as the DOM + first hero image are ready (min 600ms, hard stop 2.5s). */
 (function () {
   var el = document.getElementById('splash-screen'), start = Date.now(), done = false;
   function hide() {
@@ -125,13 +125,13 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
     document.documentElement.classList.remove('splash-lock');
     setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 600);
   }
-  function ready() { setTimeout(hide, Math.max(0, 4000 - (Date.now() - start))); }
+  function ready() { setTimeout(hide, Math.max(0, 600 - (Date.now() - start))); }
   function domReady() {
     var im = document.getElementById('__16') || document.querySelector('#home-image-slider-1 img');
     if (im && !im.complete) { im.addEventListener('load', ready); im.addEventListener('error', ready); } else ready();
   }
   if (document.readyState !== 'loading') domReady(); else document.addEventListener('DOMContentLoaded', domReady);
-  setTimeout(hide, 6000);
+  setTimeout(hide, 2500);
 })();
 </script>
 
@@ -1505,28 +1505,19 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
     v.preload = 'none';
     delete v.dataset.started; delete v.dataset.seekCover; delete v.dataset.hasThumb; v.removeAttribute('poster'); v.removeAttribute('src');
     v.dataset.src = url + (url.indexOf('#') === -1 ? '#t=0.5' : '');   // #t=0.5 -> browser shows a real frame as cover
-    /* FAST PATH: the thumbnail <img> is created at once with the best guess (remembered pattern or
-       thumbnail/N.jpg) - no waiting for 16 probe requests. Only if that guess 404s do we probe. */
-    (function () {
-      var n = videoNumber(url, index || 0), box = v.parentNode;
-      var guess = thumbPattern ? thumbPattern.d + n + '.' + thumbPattern.e : THUMB_DIRS[0] + n + '.jpg';
-      Array.prototype.forEach.call(box.querySelectorAll('.vc-thumb'), function (o) { o.remove(); });
-      var ti = document.createElement('img');
-      ti.className = 'vc-thumb'; ti.alt = ''; ti.decoding = 'async'; ti.draggable = false; ti.loading = 'eager';
-      ti.fetchPriority = (index || 0) < 8 ? 'high' : 'auto';
-      v.dataset.hasThumb = '1';
-      ti.onload = function () { ti.onload = null; learn(guess); };
-      ti.onerror = function () {
-        ti.onerror = null;
-        findThumb(n).then(function (thumb) {
-          if (thumb && thumb !== guess) { ti.src = thumb; }
-          else if (!thumb) { ti.remove(); delete v.dataset.hasThumb; loadSrc(v, 'metadata'); }
-        });
-      };
-      ti.src = guess;
-      box.appendChild(ti);
-      if (io) io.observe(slot);
-    })();
+    findThumb(videoNumber(url, index || 0)).then(function (thumb) {
+      if (thumb) {
+        v.dataset.hasThumb = '1';
+        var box = v.parentNode;
+        Array.prototype.forEach.call(box.querySelectorAll('.vc-thumb'), function (o) { o.remove(); });
+        var ti = document.createElement('img');            // stays on top of the video until the visitor clicks play
+        ti.className = 'vc-thumb'; ti.alt = ''; ti.decoding = 'async'; ti.draggable = false;
+        ti.loading = 'eager'; ti.fetchPriority = (index || 0) < 8 ? 'high' : 'auto';
+        ti.src = thumb;
+        box.appendChild(ti);
+      }
+      if (io) io.observe(slot); else if (!thumb) loadSrc(v, 'metadata');
+    });
     ['pointerenter', 'touchstart', 'focusin'].forEach(function (ev) {
       slot.addEventListener(ev, function () { loadSrc(v, 'auto'); }, { passive: true, once: true });
     });
