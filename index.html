@@ -1326,6 +1326,38 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
     }
     return step(0);
   }
+  /* Some slider photos have solid black bars saved INSIDE the file (e.g. a black strip on the right). object-fit:cover cannot
+     hide those, so every slide is scanned once after loading: solid near-black edge columns/rows are cropped away and the
+     slide is re-drawn from the cropped picture, so each photo fills the hero edge to edge. Genuinely dark photos are safe:
+     an edge is only removed when almost every pixel on it is pure black, and never more than 40% from one side. */
+  function trimBlackBorders(im) {
+    if (im.dataset.trimmed) return;
+    im.dataset.trimmed = '1';
+    try {
+      var W = im.naturalWidth, H = im.naturalHeight; if (!W || !H) return;
+      var sw = Math.min(400, W), sh = Math.max(1, Math.round(H * sw / W));
+      var c = document.createElement('canvas'); c.width = sw; c.height = sh;
+      var x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0, sw, sh);
+      var d = x.getImageData(0, 0, sw, sh).data, LIM = 30, SHARE = 0.985;
+      function dark(px) { var i = px * 4; return d[i] < LIM && d[i + 1] < LIM && d[i + 2] < LIM; }
+      function col(cx) { var n = 0; for (var y = 0; y < sh; y++) if (dark(y * sw + cx)) n++; return n / sh >= SHARE; }
+      function row(ry) { var n = 0; for (var xx = 0; xx < sw; xx++) if (dark(ry * sw + xx)) n++; return n / sw >= SHARE; }
+      var L = 0, R = sw - 1, T = 0, B = sh - 1;
+      while (L < sw * 0.4 && col(L)) L++;
+      while (R > sw * 0.6 && col(R)) R--;
+      while (T < sh * 0.4 && row(T)) T++;
+      while (B > sh * 0.6 && row(B)) B--;
+      if (L <= 1 && R >= sw - 2 && T <= 1 && B >= sh - 2) return;          // nothing to trim
+      var m = 2;                                                           // small safety margin (JPEG edge noise)
+      if (L > 0) L += m; if (R < sw - 1) R -= m; if (T > 0) T += m; if (B < sh - 1) B -= m;
+      var sx = Math.round(L / sw * W), sy = Math.round(T / sh * H);
+      var cw = Math.round((R + 1) / sw * W) - sx, ch = Math.round((B + 1) / sh * H) - sy;
+      if (cw < W * 0.3 || ch < H * 0.3) return;
+      var o = document.createElement('canvas'); o.width = cw; o.height = ch;
+      o.getContext('2d').drawImage(im, sx, sy, cw, ch, 0, 0, cw, ch);
+      o.toBlob(function (b) { if (b) { log('trimmed black border on', im.dataset.src, [sx, sy, cw, ch]); im.src = URL.createObjectURL(b); } }, 'image/jpeg', 0.92);
+    } catch (e) { /* cross-origin / file:// canvas blocked: leave the image as it is */ }
+  }
   var KEY = 'heroUrls', timer = null;
   function readCache() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } }
   function writeCache(a) { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }
@@ -1341,6 +1373,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
         var im = document.createElement('img');
         im.className = 'hero-slide';
         im.alt = 'Project image ' + (i + 1); im.draggable = false; im.decoding = 'async'; im.dataset.src = u;
+        im.addEventListener('load', function () { trimBlackBorders(im); });   // photos with black bars baked into the file get cropped
         if (i === 0) im.src = u;                 // only the first image loads now; the next ones load one after another
         if (i === 0) { im.fetchPriority = 'high'; im.loading = 'eager';
           im.onerror = function () { writeCache([]); if (!im.dataset.retry) { im.dataset.retry = 1; find().then(function (f) { if (f.length) { writeCache(f); build(f); } else if (urls !== FALLBACK) build(FALLBACK); }); } };
