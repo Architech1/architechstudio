@@ -169,11 +169,16 @@
    batches) so nothing is still downloading when the visitor scrolls to it. */
 (function () {
   function warm() {
-    var imgs = Array.prototype.slice.call(document.querySelectorAll('img[loading="lazy"]'));
+    // only warm the layout that is actually visible (the hidden mobile/desktop copy would download everything twice)
+    var active = document.querySelector(window.innerWidth <= 768 ? '.responsive-mobile' : '.responsive-desktop');
+    var imgs = Array.prototype.slice.call((active || document).querySelectorAll('img[loading="lazy"]'));
     var i = 0;
     function batch() {
       var n = 0;
-      while (i < imgs.length && n < 4) { imgs[i].loading = 'eager'; i++; n++; }
+      while (i < imgs.length && n < 4) {
+        try { imgs[i].fetchPriority = 'low'; } catch (e) {}
+        imgs[i].loading = 'eager'; i++; n++;
+      }
       if (i < imgs.length) { (window.requestIdleCallback || function (f) { setTimeout(f, 60); })(batch); }
     }
     batch();
@@ -240,13 +245,20 @@ if (document.readyState === 'loading') {
 function initCustomSlideshows() {
   const slideshows = document.querySelectorAll('.custom-slideshow');
   slideshows.forEach(show => {
-    let imgs = show.querySelectorAll('.slide');
+    const imgs = show.querySelectorAll('.slide');
     if (imgs.length === 0) return;
+    imgs.forEach(im => { im.loading = 'eager'; im.decoding = 'async'; });
+    const ready = im => im.complete && im.naturalWidth > 0;
     let idx = 0;
     setInterval(() => {
-      imgs[idx].style.opacity = '0';
-      idx = (idx + 1) % imgs.length;
-      imgs[idx].style.opacity = '1';
+      if (document.hidden) return;
+      const next = (idx + 1) % imgs.length;
+      if (!ready(imgs[next])) return;            // next image not downloaded yet: keep showing the current one
+      const cur = imgs[idx], nxt = imgs[next];
+      nxt.style.zIndex = '2'; cur.style.zIndex = '1';
+      nxt.style.opacity = '1';                   // new image fades in on top, old one stays visible: no black dip
+      idx = next;
+      setTimeout(() => { if (cur !== imgs[idx]) { cur.style.opacity = '0'; cur.style.zIndex = '0'; } }, 1700);
     }, 3500);
   });
 }
