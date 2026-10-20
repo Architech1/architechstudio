@@ -2330,14 +2330,3 @@ html, body { overflow-x: hidden; }
     max-height: calc(8482px + var(--hero-shift));
   }
 }
-/* ==========================================================================
-   Desktop hero: remove the hard black bar across the top of the slideshow.
-   The navbar had a solid dark gradient (83% -> 50% black) with a sharp bottom edge,
-   which looked like a black cut through the hero image. Now it fades out to fully
-   transparent, so the menu text stays readable but there is no visible edge.
-   ========================================================================== */
-@media screen and (min-width: 769px) {
-  .responsive-desktop #navbar-container {
-    background-image: linear-gradient(to bottom, rgba(0,0,0,.72) 0%, rgba(0,0,0,.4) 50%, rgba(0,0,0,0) 100%) !important;
-  }
-}
