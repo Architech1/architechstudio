@@ -1,3 +1,19 @@
+/* Instagram video thumbnails: start fetching + decoding thumbnail/1..5.jpg the instant this script runs,
+   so they are already in the browser cache when the video cards are built. */
+(function () {
+  try {
+    var p = null; try { p = JSON.parse(localStorage.getItem("thumbPattern") || "null"); } catch (e) {}
+    var d = (p && p.d) || "thumbnail/", x = (p && p.e) || "jpg";
+    window.__thumbPrime = [];
+    for (var i = 1; i <= 5; i++) {
+      var im = new Image();
+      im.decoding = "async"; im.fetchPriority = "high";
+      im.src = d + i + "." + x;
+      window.__thumbPrime.push(im);
+    }
+  } catch (e) {}
+})();
+
 (function () {
   "use strict";
 
@@ -148,7 +164,11 @@
   window.addEventListener("resize", debouncedFit, { passive: true });
   window.addEventListener("orientationchange", debouncedFit, { passive: true });
   if (window.visualViewport) window.visualViewport.addEventListener("resize", debouncedFit, { passive: true });
-  document.addEventListener("DOMContentLoaded", fitExactDesign);
+  document.addEventListener("DOMContentLoaded", function () {
+    fitExactDesign();
+    requestAnimationFrame(positionInstaCta);   // Instagram button placed on the first frame, not after load
+    setTimeout(positionInstaCta, 120);
+  });
   window.addEventListener("load", function () { fitExactDesign(); setTimeout(positionInstaCta, 900); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(positionInstaCta);
   fitExactDesign();
@@ -340,5 +360,5 @@ if (document.readyState === 'loading') {
   window.addEventListener('orientationchange', soon, { passive: true });
   window.addEventListener('resize', soon, { passive: true });
   window.addEventListener('load', function () { soon(); setTimeout(close, 1000); setTimeout(close, 2500); });
-  document.addEventListener('DOMContentLoaded', function () { setTimeout(close, 400); });
+  document.addEventListener('DOMContentLoaded', function () { requestAnimationFrame(close); setTimeout(close, 120); setTimeout(close, 400); });
 })();
