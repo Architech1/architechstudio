@@ -87,23 +87,6 @@
 .loc-row svg{position:static !important;flex:0 0 auto !important;width:26px !important;height:30px !important;margin:0 !important}
 @media (min-width:769px){.loc-row{width:var(--loc-w,520px) !important}.loc-row svg{width:36px !important;height:38px !important}}
 </style>
-<style id="hero-width-fix">
-/* HERO FULL-WIDTH FIX: wins over style.css (Figma-export offsets/widths/transforms) and over the layout scripts' translate shifts */
-#home-image-slider-1{left:0 !important;right:0 !important;margin-left:0 !important;margin-right:0 !important;width:100% !important;max-width:none !important;overflow:hidden !important;background:#0a0a0a !important}
-#home-image-slider-1 > div,
-#home-image-slider-1 #Image,#home-image-slider-1 #Image_0,#home-image-slider-1 #__17{
-  position:absolute !important;left:0 !important;top:0 !important;right:0 !important;bottom:0 !important;
-  width:100% !important;height:100% !important;min-width:100% !important;max-width:none !important;
-  margin:0 !important;padding:0 !important;translate:none !important;transform:none !important;scale:none !important;overflow:hidden !important}
-#home-image-slider-1 .hero-slideshow{position:absolute !important;left:0 !important;top:0 !important;right:0 !important;bottom:0 !important;
-  width:100% !important;height:100% !important;min-width:100% !important;max-width:none !important;margin:0 !important;padding:0 !important;
-  translate:none !important;transform:none !important;scale:none !important}
-#home-image-slider-1 .hero-slideshow img.hero-slide{position:absolute !important;left:0 !important;top:0 !important;right:auto !important;bottom:auto !important;
-  width:100% !important;height:100% !important;min-width:100% !important;max-width:none !important;max-height:none !important;
-  margin:0 !important;padding:0 !important;translate:none !important;transform:none !important;scale:none !important;rotate:none !important;
-  object-fit:cover !important;object-position:50% 40% !important;display:block !important}
-@media (min-width:769px){#home-image-slider-1 .hero-slideshow img.hero-slide{object-position:center center !important}}
-</style>
 <style id="splash-css">
 /* ---- loading splash screen ---- */
 #splash-screen{position:fixed;inset:0;z-index:100000;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;opacity:1;visibility:visible;transition:opacity .7s ease,visibility .7s ease}
@@ -1223,6 +1206,27 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 </script>
 
 <script>
+/* FULL-WIDTH FIX: the stylesheet's "zoom: calc(100vw / 390)" is invalid CSS, so browsers ignored it and the page
+   stayed a fixed 390px / 1920px canvas -> the hero image stopped short of the screen edge (gap) on every other width.
+   Here the same zoom is applied as a real number, so the canvas (and the hero slider) always fills the viewport. */
+(function () {
+  function fit() {
+    var mobile = window.innerWidth <= 768;
+    var wrap  = document.querySelector(mobile ? '.responsive-mobile' : '.responsive-desktop');
+    var other = document.querySelector(mobile ? '.responsive-desktop' : '.responsive-mobile');
+    if (other) other.style.removeProperty('zoom');
+    if (!wrap) return;
+    var w = document.documentElement.clientWidth || window.innerWidth;
+    wrap.style.setProperty('zoom', String(w / (mobile ? 390 : 1920)), 'important');
+  }
+  fit();
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', fit);
+  window.addEventListener('load', fit);
+})();
+</script>
+
+<script>
 /* Hero slider: shows every image from the "slider" folder in the hero (mobile + desktop).
    For each folder name it tries: (1) images.json, (2) the server's folder listing, (3) numbered / common file names.
    Open the browser console (F12) to see what was found. The old built-in hero slides are removed. */
@@ -1329,7 +1333,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
         if (i === 0) { im.fetchPriority = 'high'; im.loading = 'eager';
           im.onerror = function () { writeCache([]); if (!im.dataset.retry) { im.dataset.retry = 1; find().then(function (f) { if (f.length) { writeCache(f); build(f); } else if (urls !== FALLBACK) build(FALLBACK); }); } };
         } else { im.loading = 'eager'; }
-        im.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;min-width:100%;max-width:none;object-fit:cover;object-position:center;transition:opacity 1.5s ease-in-out;opacity:' + (i === 0 ? 1 : 0) + ';';
+        im.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;transition:opacity 1.5s ease-in-out;opacity:' + (i === 0 ? 1 : 0) + ';';
         box.insertBefore(im, overlay || null);
         return im;
       });
