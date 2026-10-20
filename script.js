@@ -317,7 +317,7 @@ if (document.readyState === 'loading') {
     var cta = wrapper.querySelector('#Mention_Widget'), svc = wrapper.querySelector('#services_section');
     if (!cta || !svc || !svc.parentElement) return;
     var block = svc.parentElement;                       // holds Services and everything below it
-    block.style.removeProperty('translate'); wrapper.style.marginBottom = '0';
+    block.style.removeProperty('translate'); document.body.style.marginBottom = '0';
     var wr = wrapper.getBoundingClientRect();
     var scale = wrapper.offsetWidth ? wr.width / wrapper.offsetWidth : 1;
     if (!scale || !isFinite(scale)) scale = 1;
@@ -326,11 +326,18 @@ if (document.readyState === 'loading') {
     var delta = gap - WANT[isMobile ? 'mobile' : 'desktop'];
     if (delta > 1 && delta < 1500) {
       block.style.setProperty('translate', '0 ' + (-delta).toFixed(2) + 'px');
-      wrapper.style.marginBottom = (-delta * scale).toFixed(1) + 'px';
+      document.body.style.marginBottom = (-delta * scale).toFixed(1) + 'px';
     }
   }
   var t;
-  function soon() { clearTimeout(t); t = setTimeout(close, 120); }
+  var lastW = window.innerWidth, raf = 0;
+  document.documentElement.style.overflowAnchor = 'none';
+  function soon() {              // same frame as the layout refit -> no visible jump while scrolling
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(function () { raf = requestAnimationFrame(function () { raf = 0; lastW = window.innerWidth; close(); clearTimeout(t); t = setTimeout(close, 250); }); });
+  }
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', soon, { passive: true });
+  window.addEventListener('orientationchange', soon, { passive: true });
   window.addEventListener('resize', soon, { passive: true });
   window.addEventListener('load', function () { soon(); setTimeout(close, 1000); setTimeout(close, 2500); });
   document.addEventListener('DOMContentLoaded', function () { setTimeout(close, 400); });
