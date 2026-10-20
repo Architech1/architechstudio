@@ -113,18 +113,22 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
   <div class="sp-bar" aria-hidden="true"></div>
 </div>
 <script>
-/* Splash: stays at least 4s, hides once the page has loaded (hard stop after 9s so it can never get stuck). */
+/* Splash: hides as soon as the DOM + first hero image are ready (min 600ms, hard stop 2.5s). */
 (function () {
   var el = document.getElementById('splash-screen'), start = Date.now(), done = false;
   function hide() {
     if (done) return; done = true;
     el.classList.add('hide');
     document.documentElement.classList.remove('splash-lock');
-    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 900);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 600);
   }
-  function ready() { setTimeout(hide, Math.max(0, 4000 - (Date.now() - start))); }
-  if (document.readyState === 'complete') ready(); else window.addEventListener('load', ready);
-  setTimeout(hide, 9000);
+  function ready() { setTimeout(hide, Math.max(0, 600 - (Date.now() - start))); }
+  function domReady() {
+    var im = document.getElementById('__16') || document.querySelector('#home-image-slider-1 img');
+    if (im && !im.complete) { im.addEventListener('load', ready); im.addEventListener('error', ready); } else ready();
+  }
+  if (document.readyState !== 'loading') domReady(); else document.addEventListener('DOMContentLoaded', domReady);
+  setTimeout(hide, 2500);
 })();
 </script>
 
@@ -179,7 +183,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 <span class="pointer-events-none text" id="Heading_2_Exceptional_service_and_support_Our_logistics_have_never_been_more_efficient_Exceptional_service_and_support_Our_logistics_have_never_been_more_efficient_"><span id="__17">We believe that a house becomes a home when it personalizes your space. It should show off your tastes and personality, work with your lifestyle, and maybe make your guests a little jealous.<br id="__18"/></span></span>
 <div id="Group_54">
 <div class="pointer-events-none" id="Image_0" style="border-radius:50%;overflow:hidden;">
-<img alt="Image" decoding="async" fetchpriority="high" id="__19" src="images/img_27_97e48d30.jpg" style="object-fit:cover;width:100%;height:100%;object-position:center top;transform:none !important;"/>
+<img alt="Image" decoding="async" loading="lazy" id="__19" src="images/img_27_97e48d30.jpg" style="object-fit:cover;width:100%;height:100%;object-position:center top;transform:none !important;"/>
 </div>
 <span class="pointer-events-none text" id="Heading_2_Olly_Schroeder"><span id="__20">Dr. Ar. Sarath Sasi P</span></span>
 <span class="pointer-events-none text" id="Heading_2_Olly_Schroeder_0"><span id="__21">Founder / Architect</span></span>
@@ -189,7 +193,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 <span class="pointer-events-none text" id="Heading_2_Exceptional_service_and_support_Our_logistics_have_never_been_more_efficient_Exceptional_service_and_support_Our_logistics_have_never_been_more_efficient_"><span id="__17_co">Great architecture and luxury interiors live at the intersection of functionality, warmth, and artistic detail. Every space we design tells a story unique to the people who call it home.<br/></span></span>
 <div id="Group_54">
 <div class="pointer-events-none" id="Image_0" style="border-radius:50%;overflow:hidden;">
-<img alt="Jishana Co-Founder" decoding="async" fetchpriority="high" id="__19_co" src="images/jishana_cofounder.jpg" style="object-fit:cover;width:100%;height:100%;object-position:center 20%;transform:none !important;"/>
+<img alt="Jishana Co-Founder" decoding="async" loading="lazy" id="__19_co" src="images/jishana_cofounder.jpg" style="object-fit:cover;width:100%;height:100%;object-position:center 20%;transform:none !important;"/>
 </div>
 <span class="pointer-events-none text" id="Heading_2_Olly_Schroeder"><span id="__20_co">Jishana</span></span>
 <span class="pointer-events-none text" id="Heading_2_Olly_Schroeder_0"><span id="__21_co">Co-Founder</span></span>
@@ -203,42 +207,42 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 <div class="video-marquee-track" id="Container_1">
 <div class="video-track">
         <div id="Group_Modern_Architecture_Concepts" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div id="Group_Sustainable_Architecture" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div style="background-color: rgb(0, 0, 0); border-radius: 14px; flex-direction: column; flex-shrink: 0; justify-content: center; align-items: start; width: 350px; height: 500px; display: flex; position: relative; overflow: hidden;" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div style="background-color: rgb(0, 0, 0); border-radius: 14px; flex-direction: column; flex-shrink: 0; justify-content: center; align-items: start; width: 350px; height: 500px; display: flex; position: relative; overflow: hidden;" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div style="background-color: rgb(0, 0, 0); border-radius: 14px; flex-direction: column; flex-shrink: 0; justify-content: center; align-items: start; width: 350px; height: 500px; display: flex; position: relative; overflow: hidden;" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div style="background-color: rgb(0, 0, 0); border-radius: 14px; flex-direction: column; flex-shrink: 0; justify-content: center; align-items: start; width: 350px; height: 500px; display: flex; position: relative; overflow: hidden;" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
       </div>
       <div class="video-track" aria-hidden="true">
         <div id="Group_Modern_Architecture_Concepts" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div id="Group_Sustainable_Architecture" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div style="background-color: rgb(0, 0, 0); border-radius: 14px; flex-direction: column; flex-shrink: 0; justify-content: center; align-items: start; width: 350px; height: 500px; display: flex; position: relative; overflow: hidden;" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div style="background-color: rgb(0, 0, 0); border-radius: 14px; flex-direction: column; flex-shrink: 0; justify-content: center; align-items: start; width: 350px; height: 500px; display: flex; position: relative; overflow: hidden;" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div style="background-color: rgb(0, 0, 0); border-radius: 14px; flex-direction: column; flex-shrink: 0; justify-content: center; align-items: start; width: 350px; height: 500px; display: flex; position: relative; overflow: hidden;" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div style="background-color: rgb(0, 0, 0); border-radius: 14px; flex-direction: column; flex-shrink: 0; justify-content: center; align-items: start; width: 350px; height: 500px; display: flex; position: relative; overflow: hidden;" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
       </div>
 </div>
@@ -453,9 +457,9 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 <div id="promo-video-container">
 <div id="Container_7">
 <div class="custom-slideshow" style="position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 12px; overflow: hidden;">
-  <img src="images/multiple.jpeg" class="slide" style="position: absolute; width: 100%; height: 100%; object-fit: cover; transition: opacity 1.5s ease-in-out; opacity: 1;">
-  <img src="images/Award Winner on a Vibrant Red Carpet.png" class="slide" style="position: absolute; width: 100%; height: 100%; object-fit: cover; transition: opacity 1.5s ease-in-out; opacity: 0;">
-  <img src="images/certificte.png" class="slide" style="position: absolute; width: 100%; height: 100%; object-fit: cover; transition: opacity 1.5s ease-in-out; opacity: 0;">
+  <img loading="lazy" decoding="async" src="images/multiple.jpeg" class="slide" style="position: absolute; width: 100%; height: 100%; object-fit: cover; transition: opacity 1.5s ease-in-out; opacity: 1;">
+  <img loading="lazy" decoding="async" src="images/Award Winner on a Vibrant Red Carpet.png" class="slide" style="position: absolute; width: 100%; height: 100%; object-fit: cover; transition: opacity 1.5s ease-in-out; opacity: 0;">
+  <img loading="lazy" decoding="async" src="images/certificte.png" class="slide" style="position: absolute; width: 100%; height: 100%; object-fit: cover; transition: opacity 1.5s ease-in-out; opacity: 0;">
 </div>
 <div id="promo_video_new_mp4">
 <div class="pointer-events-none" id="__15_0">
@@ -747,9 +751,9 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 <svg class="pointer-events-none" fill="none" height="32" id="SVG_0" preserveaspectratio="none" viewbox="0 0 32 32" width="32" xmlns="http://www.w3.org/2000/svg"><path d="M15.9975 29.3326C23.3612 29.3326 29.3307 23.3631 29.3307 15.9994C29.3307 8.63555 23.3612 2.66602 15.9975 2.66602C8.6336 2.66602 2.66406 8.63555 2.66406 15.9994C2.66406 23.3631 8.6336 29.3326 15.9975 29.3326Z" fill="#195677" stroke="#195677" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.28571"></path><path d="M16 21.3346L21.3334 16.0014L16 10.668" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.28571"></path><path d="M10.6641 16H21.3307" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.28571"></path></svg>
 <div class="pointer-events-none" id="promo-video-container">
 <div class="custom-slideshow" style="position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 12px; overflow: hidden;">
-  <img src="images/multiple.jpeg" class="slide" style="position: absolute; width: 100%; height: 100%; object-fit: cover; transition: opacity 1.5s ease-in-out; opacity: 1;">
-  <img src="images/Award Winner on a Vibrant Red Carpet.png" class="slide" style="position: absolute; width: 100%; height: 100%; object-fit: cover; transition: opacity 1.5s ease-in-out; opacity: 0;">
-  <img src="images/certificte.png" class="slide" style="position: absolute; width: 100%; height: 100%; object-fit: cover; transition: opacity 1.5s ease-in-out; opacity: 0;">
+  <img loading="lazy" decoding="async" src="images/multiple.jpeg" class="slide" style="position: absolute; width: 100%; height: 100%; object-fit: cover; transition: opacity 1.5s ease-in-out; opacity: 1;">
+  <img loading="lazy" decoding="async" src="images/Award Winner on a Vibrant Red Carpet.png" class="slide" style="position: absolute; width: 100%; height: 100%; object-fit: cover; transition: opacity 1.5s ease-in-out; opacity: 0;">
+  <img loading="lazy" decoding="async" src="images/certificte.png" class="slide" style="position: absolute; width: 100%; height: 100%; object-fit: cover; transition: opacity 1.5s ease-in-out; opacity: 0;">
 </div>
 </div>
 <div id="Image_2">
@@ -1081,42 +1085,42 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 <div class="video-marquee-track" id="Container_1">
 <div class="video-track">
         <div id="Group_Minimalist_Architecture" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div id="Group_Futuristic_Architecture" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div id="Background_1">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div id="Background_3">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div id="Background_5">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div id="Background_7">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
       </div>
       <div class="video-track" aria-hidden="true">
         <div id="Group_Minimalist_Architecture" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div id="Group_Futuristic_Architecture" role="group">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div id="Background_1">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div id="Background_3">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div id="Background_5">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
         <div id="Background_7">
-          <video class="folder-video" playsinline preload="metadata" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
+          <video class="folder-video" playsinline preload="none" disablepictureinpicture style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; background:#111;"></video>
         </div>
       </div>
 </div>
@@ -1505,7 +1509,7 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
         Array.prototype.forEach.call(box.querySelectorAll('.vc-thumb'), function (o) { o.remove(); });
         var ti = document.createElement('img');            // stays on top of the video until the visitor clicks play
         ti.className = 'vc-thumb'; ti.alt = ''; ti.decoding = 'async'; ti.draggable = false;
-        if ((index || 0) < 4) ti.fetchPriority = 'high';
+        ti.loading = 'eager'; ti.fetchPriority = (index || 0) < 8 ? 'high' : 'auto';
         ti.src = thumb;
         box.appendChild(ti);
       }
