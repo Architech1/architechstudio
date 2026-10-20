@@ -83,7 +83,7 @@ window.addEventListener('resize',g,true);if(window.visualViewport)window.visualV
 <script>/* earliest possible preload of the first hero image + first video thumbnails (urls remembered from the previous visit) */
 (function(){try{function pl(u){var l=document.createElement('link');l.rel='preload';l.as='image';l.href=u;l.setAttribute('fetchpriority','high');document.head.appendChild(l);}
 var h=JSON.parse(localStorage.getItem('heroUrls')||'[]');pl('slider/2.jpg');
-var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1;i<=3;i++)pl(t.d+i+'.'+t.e);}}catch(e){}})();</script>
+var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1;i<=3;i++)pl(t.d+i+'.'+t.e);}else{for(var j=1;j<=3;j++)pl('thumbnail/'+j+'.jpg');}}catch(e){}})();</script>
 <style id="loc-css">
 /* "We are located at" row: icon + text sit side by side and wrap by themselves (mobile + desktop) */
 .loc-row{display:flex !important;flex-direction:row !important;align-items:flex-start !important;justify-content:flex-start !important;gap:12px;
@@ -1940,6 +1940,15 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
     startLayout();
     var cached = []; try { cached = JSON.parse(localStorage.getItem('videoList') || '[]'); } catch (e) {}
     if (cached.length) apply(cached);          // repeat visit: cards + thumbnails appear straight away
+    else {                                      // first visit: start the thumbnails NOW (don't wait for video discovery)
+      var nSlots = 0;
+      document.querySelectorAll('.video-track').forEach(function (tr) {
+        var c = Array.prototype.filter.call(tr.children, function (el) { return el.tagName === 'DIV'; }).length;
+        if (c > nSlots) nSlots = c;
+      });
+      var temp = []; for (var k = 1; k <= nSlots; k++) temp.push(DIR + k + '.mp4');
+      if (temp.length) apply(temp);            // provisional: only thumbnail/N.jpg images; real list replaces it below
+    }
     discover().then(function (list) {
       if (!list.length) return;
       try { localStorage.setItem('videoList', JSON.stringify(list)); } catch (e) {}
