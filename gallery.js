@@ -5,13 +5,12 @@
 document.addEventListener('DOMContentLoaded', () => {
   const DIR = 'gallery-images/';
   const EXT = /\.(jpe?g|png|webp|avif|gif|svg)$/i;
-  const PREFIXES = ['alcove_img_', ''];
-  const PROBE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'];
-  const MAX_NUMBER = 300;
-  const CHUNK = 10;            // numbers probed in parallel
+  const PROBE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif', 'JPG', 'JPEG', 'PNG', 'WEBP'];
+  const MAX_NUMBER = 500;
+  const CHUNK = 8;             // numbers probed in parallel
   const EAGER_COUNT = 6;       // first images load with high priority
   const SKELETON_COUNT = 12;
-  const CACHE_KEY = 'gallery:list:v1';
+  const CACHE_KEY = 'gallery:list:v3';
 
   const grid = document.getElementById('minimalGrid');
   const lightbox = document.getElementById('minimalLightbox');
@@ -70,37 +69,35 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  // HEAD request: checks existence without downloading the image. Falls back to <img> (file://).
+  function imgProbe(src) {
+    return new Promise(res => {
+      const i = new Image();
+      i.onload = () => res(src);
+      i.onerror = () => res(null);
+      i.src = src;
+    });
+  }
+
+  // HEAD request first (cheap). If the host rejects HEAD or sends an odd content-type, fall back to <img>.
   async function exists(src) {
     try {
       const r = await fetch(src, { method: 'HEAD' });
-      return r.ok && (r.headers.get('content-type') || '').startsWith('image') ? src : null;
-    } catch {
-      return new Promise(res => {
-        const i = new Image();
-        i.onload = () => res(src);
-        i.onerror = () => res(null);
-        i.src = src;
-      });
-    }
+      if (r.status === 404) return null;
+      const ct = r.headers.get('content-type') || '';
+      if (r.ok && ct.startsWith('image')) return src;
+      if (r.ok && ct.includes('html')) return null; // SPA fallback page, not an image
+    } catch {}
+    return imgProbe(src);
   }
 
+  // Last resort only (no listing, no manifest): plain numbered names 1.jpg, 2.png ...
   async function fromProbing() {
-    // Step 1: detect which prefix the files use (only checks the first few numbers)
-    let prefix = null;
-    for (const p of PREFIXES) {
-      const hits = await Promise.all([1, 2, 3].flatMap(n => PROBE_EXTS.map(e => exists(`${DIR}${p}${n}.${e}`))));
-      if (hits.some(Boolean)) { prefix = p; break; }
-    }
-    if (prefix === null) throw 0;
-
-    // Step 2: probe in big parallel chunks with that prefix only
     const found = [];
     let emptyChunks = 0;
-    for (let start = 1; start <= MAX_NUMBER && emptyChunks < 2; start += CHUNK) {
+    for (let start = 0; start <= MAX_NUMBER && emptyChunks < 3; start += CHUNK) {
       const nums = Array.from({ length: CHUNK }, (_, i) => start + i);
       const results = await Promise.all(
-        nums.map(async n => (await Promise.all(PROBE_EXTS.map(e => exists(`${DIR}${prefix}${n}.${e}`)))).find(Boolean))
+        nums.map(async n => (await Promise.all(PROBE_EXTS.map(e => exists(`${DIR}${n}.${e}`)))).find(Boolean))
       );
       const hits = results.filter(Boolean);
       found.push(...hits);
