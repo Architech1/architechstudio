@@ -304,3 +304,34 @@ if (document.readyState === 'loading') {
 } else {
   initMainGalleryScrollAnimation();
 }
+
+
+/* Close the empty gap between "VIEW ON INSTAGRAM" and SERVICES: the section below is pulled up
+   so the distance from the button to the SERVICES heading is a fixed, tidy value on every device. */
+(function () {
+  var WANT = { mobile: 70, desktop: 100 };   // design px: button bottom -> SERVICES heading
+  function close() {
+    var isMobile = window.innerWidth <= 768;
+    var wrapper = document.querySelector(isMobile ? '.responsive-mobile' : '.responsive-desktop');
+    if (!wrapper) return;
+    var cta = wrapper.querySelector('#Mention_Widget'), svc = wrapper.querySelector('#services_section');
+    if (!cta || !svc || !svc.parentElement) return;
+    var block = svc.parentElement;                       // holds Services and everything below it
+    block.style.removeProperty('translate'); wrapper.style.marginBottom = '0';
+    var wr = wrapper.getBoundingClientRect();
+    var scale = wrapper.offsetWidth ? wr.width / wrapper.offsetWidth : 1;
+    if (!scale || !isFinite(scale)) scale = 1;
+    var head = svc.querySelector('[id^="Heading_2_SERVICES"]') || svc;
+    var gap = (head.getBoundingClientRect().top - cta.getBoundingClientRect().bottom) / scale;
+    var delta = gap - WANT[isMobile ? 'mobile' : 'desktop'];
+    if (delta > 1 && delta < 1500) {
+      block.style.setProperty('translate', '0 ' + (-delta).toFixed(2) + 'px');
+      wrapper.style.marginBottom = (-delta * scale).toFixed(1) + 'px';
+    }
+  }
+  var t;
+  function soon() { clearTimeout(t); t = setTimeout(close, 120); }
+  window.addEventListener('resize', soon, { passive: true });
+  window.addEventListener('load', function () { soon(); setTimeout(close, 1000); setTimeout(close, 2500); });
+  document.addEventListener('DOMContentLoaded', function () { setTimeout(close, 400); });
+})();
