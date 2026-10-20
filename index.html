@@ -87,6 +87,11 @@
 .loc-row svg{position:static !important;flex:0 0 auto !important;width:26px !important;height:30px !important;margin:0 !important}
 @media (min-width:769px){.loc-row{width:var(--loc-w,520px) !important}.loc-row svg{width:36px !important;height:38px !important}}
 </style>
+<style id="hero-fullwidth-fix">
+#home-image-slider-1{left:0 !important;right:auto !important;width:var(--hero-w,100%) !important;max-width:none !important}
+#home-image-slider-1 > div,#home-image-slider-1 #Image,#home-image-slider-1 #Image_0,#home-image-slider-1 #__17{left:0 !important;right:0 !important;width:100% !important;max-width:none !important}
+html,body{background:#0a0a0a}
+</style>
 <style id="splash-css">
 /* ---- loading splash screen ---- */
 #splash-screen{position:fixed;inset:0;z-index:100000;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;opacity:1;visibility:visible;transition:opacity .7s ease,visibility .7s ease}
@@ -1206,23 +1211,29 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
 </script>
 
 <script>
-/* FULL-WIDTH FIX: the stylesheet's "zoom: calc(100vw / 390)" is invalid CSS, so browsers ignored it and the page
-   stayed a fixed 390px / 1920px canvas -> the hero image stopped short of the screen edge (gap) on every other width.
-   Here the same zoom is applied as a real number, so the canvas (and the hero slider) always fills the viewport. */
+/* FULL-WIDTH FIX
+   1) The stylesheet's "zoom: calc(100vw / 390)" is invalid CSS, so the page stayed a fixed 390px / 1920px canvas.
+      Here the zoom is applied as a real number and re-measured on every resize / zoom / rotate / load.
+   2) The hero itself is ALSO sized from the real viewport width (--hero-w), so even if the canvas scale is ever
+      out of date, the hero image still reaches both screen edges (no white gap). */
 (function () {
+  var root = document.documentElement;
   function fit() {
     var mobile = window.innerWidth <= 768;
     var wrap  = document.querySelector(mobile ? '.responsive-mobile' : '.responsive-desktop');
     var other = document.querySelector(mobile ? '.responsive-desktop' : '.responsive-mobile');
     if (other) other.style.removeProperty('zoom');
     if (!wrap) return;
-    var w = document.documentElement.clientWidth || window.innerWidth;
-    wrap.style.setProperty('zoom', String(w / (mobile ? 390 : 1920)), 'important');
+    var vw = root.clientWidth || window.innerWidth;
+    var z  = vw / (mobile ? 390 : 1920);
+    wrap.style.setProperty('zoom', String(z), 'important');
+    root.style.setProperty('--hero-w', (vw / z) + 'px');       // hero width in canvas units = exactly the viewport
   }
   fit();
-  window.addEventListener('resize', fit);
-  window.addEventListener('orientationchange', fit);
-  window.addEventListener('load', fit);
+  ['resize', 'orientationchange', 'load', 'pageshow'].forEach(function (e) { window.addEventListener(e, fit); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', fit);
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(root);
+  var n = 0, t = setInterval(function () { fit(); if (++n > 20) clearInterval(t); }, 250);   // settle after splash / fonts / DevTools
 })();
 </script>
 
