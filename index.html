@@ -76,6 +76,9 @@
 html.splash-lock,html.splash-lock body{overflow:hidden !important}
 @media (prefers-reduced-motion:reduce){#splash-screen .sp-logo,#splash-screen .sp-name,#splash-screen .sp-bar{animation:none;opacity:1;transform:none}#splash-screen .sp-bar::after{animation:none;width:100%}}
 </style>
+<script>/* scroll-stability gate: phone address-bar show/hide fires height-only resize events; ignoring them stops the page re-laying out (and the Instagram button jumping) while scrolling */
+(function(){var w=window.innerWidth;function g(e){if(window.innerWidth===w){e.stopImmediatePropagation();}else{w=window.innerWidth;}}
+window.addEventListener('resize',g,true);if(window.visualViewport)window.visualViewport.addEventListener('resize',function(e){if(window.innerWidth===w)e.stopImmediatePropagation();},true);})();</script>
 <script>document.documentElement.classList.add('splash-lock');</script>
 <script>/* earliest possible preload of the first hero image + first video thumbnails (urls remembered from the previous visit) */
 (function(){try{function pl(u){var l=document.createElement('link');l.rel='preload';l.as='image';l.href=u;l.setAttribute('fetchpriority','high');document.head.appendChild(l);}
