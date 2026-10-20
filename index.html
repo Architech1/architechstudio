@@ -1462,7 +1462,6 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
   function playVideo(v) {
     allVideos().forEach(function (o) { if (o !== v && !o.paused) o.pause(); });  // one at a time
     if (v.dataset.seekCover) { v.currentTime = 0; delete v.dataset.seekCover; }
-    var th = v.parentNode.querySelector('.vc-thumb'); if (th) th.classList.add('vc-gone');   // thumbnail disappears only now
     loadSrc(v, 'auto');
     v.dataset.started = '1';
     v.muted = false; v.volume = 1;
@@ -1539,8 +1538,18 @@ var t=JSON.parse(localStorage.getItem('thumbPattern')||'null');if(t){for(var i=1
     btn.addEventListener('click', function (e) { e.stopPropagation(); playVideo(v); });
     slot.appendChild(btn);
 
-    v.addEventListener('click', function () { if (v.paused) playVideo(v); else v.pause(); });
-    ['play', 'playing', 'pause', 'ended', 'emptied'].forEach(function (ev) { v.addEventListener(ev, sync); });
+    if (!v.__vcBound) {     // listeners are added once only: a second setupSlot must not double-fire them (click would play, then pause)
+      v.__vcBound = true;
+      v.addEventListener('click', function () { if (v.paused) playVideo(v); else v.pause(); });
+      ['play', 'playing', 'pause', 'ended', 'emptied'].forEach(function (ev) { v.addEventListener(ev, sync); });
+      v.addEventListener('playing', function () {      // thumbnail goes away only when the video is actually showing frames
+        var th = v.parentNode.querySelector('.vc-thumb'); if (th) th.classList.add('vc-gone');
+      });
+      v.addEventListener('ended', function () {         // finished: thumbnail + play button come back, ready to click again
+        var th = v.parentNode.querySelector('.vc-thumb'); if (th) th.classList.remove('vc-gone');
+        try { v.currentTime = 0; } catch (e) {}
+      });
+    }
   }
 
   /* ---------- sizes, gaps and overlaps ----------
