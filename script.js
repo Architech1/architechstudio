@@ -43,6 +43,13 @@
     if (Math.abs(delta) > 0.25) cta.style.setProperty("translate", "0 " + delta.toFixed(2) + "px");
   }
   window.__positionInstaCta = positionInstaCta;
+  var lastW = -1, lastOrient = "", cachedVh = 0;
+  function orient() { return window.innerWidth > window.innerHeight ? "l" : "p"; }
+  function stableViewportHeight() {
+    var cur = Math.max(window.innerHeight, (window.visualViewport ? window.visualViewport.height : 0));
+    if (!cachedVh || window.innerWidth !== lastW || orient() !== lastOrient) cachedVh = cur;
+    return cachedVh;
+  }
   function fitExactDesign() {
     if (window.__vcResetSpacing) window.__vcResetSpacing();   // undo spacing tweaks first; they are re-applied after the re-fit
     var mobile = document.querySelector(".responsive-mobile");
@@ -53,6 +60,8 @@
     if (desktop) desktop.style.display = !isMobile ? 'block' : 'none';
     if (!wrapper) return;
 
+    stableViewportHeight();
+    lastW = window.innerWidth; lastOrient = orient();
     var baseWidth = isMobile ? 390 : 1920;
     var scale = window.innerWidth / baseWidth;   // always fill the screen width (also above 390 / 1920)
 
@@ -74,7 +83,8 @@
         if (heroBg) {
             var currentHeight = 702;
             // visual viewport height = what is actually visible (handles the mobile address bar)
-            var vh = Math.max(window.innerHeight, (window.visualViewport ? window.visualViewport.height : 0));
+            // cached per width/orientation: the address bar showing/hiding while scrolling must NOT change the layout
+            var vh = stableViewportHeight();
             // real on-screen scale of the 390px canvas (style.css also applies `zoom`, so this
             // can differ from innerWidth/390 and made the hero too short -> white strip)
             var effScale = wrapper.getBoundingClientRect().width / 390;
@@ -141,17 +151,34 @@
   }
 
   function debouncedFit() {
+      // mobile: browser address-bar show/hide only changes the height -> ignore it (prevents scroll jitter)
+      if (window.innerWidth <= 768 && window.innerWidth === lastW && orient() === lastOrient) return;
       if(resizeTimeout) cancelAnimationFrame(resizeTimeout);
       resizeTimeout = requestAnimationFrame(fitExactDesign);
   }
 
   window.addEventListener("resize", debouncedFit, { passive: true });
   window.addEventListener("orientationchange", debouncedFit, { passive: true });
-  if (window.visualViewport) window.visualViewport.addEventListener("resize", debouncedFit, { passive: true });
   document.addEventListener("DOMContentLoaded", fitExactDesign);
   window.addEventListener("load", function () { fitExactDesign(); setTimeout(positionInstaCta, 900); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(positionInstaCta);
   fitExactDesign();
+})();
+
+/* Image speed: after first paint, pull every lazy image into the cache (top-to-bottom, in small idle
+   batches) so nothing is still downloading when the visitor scrolls to it. */
+(function () {
+  function warm() {
+    var imgs = Array.prototype.slice.call(document.querySelectorAll('img[loading="lazy"]'));
+    var i = 0;
+    function batch() {
+      var n = 0;
+      while (i < imgs.length && n < 4) { imgs[i].loading = 'eager'; i++; n++; }
+      if (i < imgs.length) { (window.requestIdleCallback || function (f) { setTimeout(f, 60); })(batch); }
+    }
+    batch();
+  }
+  window.addEventListener('load', function () { setTimeout(warm, 300); });
 })();
 
 /* Founder & Co-Founder Card Slider Animation */
