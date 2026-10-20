@@ -5,7 +5,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const DIR = 'gallery-images/';
   const EXT = /\.(jpe?g|png|webp|avif|gif|svg)$/i;
-  const PREFIXES = ['alcove_img_', 'Meera_img-', 'IMG_', 'photo-', 'image', '']; // fallback names only: alcove_img_1.jpg / 1.jpg
+  const PREFIXES = ['alcove_img_', 'Meera_img-', 'Nesta-Apartment_img-', 'photo-', 'image', '']; // fallback names only: alcove_img_1.jpg / 1.jpg
   const PROBE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif', 'JPG', 'JPEG', 'PNG', 'WEBP'];
   const MAX_NUMBER = 500;
   const CHUNK = 8;             // numbers probed in parallel
